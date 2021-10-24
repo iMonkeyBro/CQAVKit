@@ -1,0 +1,14 @@
+//
+//  PrefixHeader.pch
+//  CQAVKit
+//
+//  Created by 刘超群 on 2021/10/25.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#import "CQMacros.h"
+
+
+#endif /* PrefixHeader_pch */
