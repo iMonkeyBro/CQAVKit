@@ -122,7 +122,7 @@
     [self addSubview:self.exposureBoxView];
 }
 
-#pragma mark - overwrite
+#pragma mark - override
 + (Class)layerClass {
     // 在UIView 重写layerClass 类方法可以让开发者创建视图实例自定义图层下
     // 重写layerClass方法并返回AVCaptureVideoPrevieLayer类对象

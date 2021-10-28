@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		977EE3F5D61272BCCD3E818D /* libPods-CQAVKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50566FC1D7CC24CC0F39690C /* libPods-CQAVKit.a */; };
+		9D1FB5C6272B12AC00F74260 /* CQCameraHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D1FB5C5272B12AC00F74260 /* CQCameraHandler.m */; };
 		9DC5068D2729B8C100FE7C27 /* CQCapturePreviewView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DC5068C2729B8C100FE7C27 /* CQCapturePreviewView.m */; };
 		9DF394772725C5C10095E269 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DF394762725C5C10095E269 /* AppDelegate.m */; };
 		9DF394822725C5C20095E269 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9DF394812725C5C20095E269 /* Assets.xcassets */; };
@@ -42,6 +43,8 @@
 /* Begin PBXFileReference section */
 		50566FC1D7CC24CC0F39690C /* libPods-CQAVKit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CQAVKit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63D95C982079000A34819C2F /* Pods-CQAVKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CQAVKit.debug.xcconfig"; path = "Target Support Files/Pods-CQAVKit/Pods-CQAVKit.debug.xcconfig"; sourceTree = "<group>"; };
+		9D1FB5C4272B12AC00F74260 /* CQCameraHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraHandler.h; sourceTree = "<group>"; };
+		9D1FB5C5272B12AC00F74260 /* CQCameraHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraHandler.m; sourceTree = "<group>"; };
 		9DC5068B2729B8C100FE7C27 /* CQCapturePreviewView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCapturePreviewView.h; sourceTree = "<group>"; };
 		9DC5068C2729B8C100FE7C27 /* CQCapturePreviewView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCapturePreviewView.m; sourceTree = "<group>"; };
 		9DF394722725C5C10095E269 /* CQAVKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CQAVKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -266,6 +269,8 @@
 			children = (
 				9DC5068B2729B8C100FE7C27 /* CQCapturePreviewView.h */,
 				9DC5068C2729B8C100FE7C27 /* CQCapturePreviewView.m */,
+				9D1FB5C4272B12AC00F74260 /* CQCameraHandler.h */,
+				9D1FB5C5272B12AC00F74260 /* CQCameraHandler.m */,
 			);
 			path = CQCapture;
 			sourceTree = "<group>";
@@ -427,6 +432,7 @@
 			files = (
 				9DF394BA2725C9C10095E269 /* AppDelegate+Init.m in Sources */,
 				9DF394C22725CAC10095E269 /* CQNavigationController.m in Sources */,
+				9D1FB5C6272B12AC00F74260 /* CQCameraHandler.m in Sources */,
 				9DF394772725C5C10095E269 /* AppDelegate.m in Sources */,
 				9DF394882725C5C20095E269 /* main.m in Sources */,
 				9DF394BD2725CA160095E269 /* CQCatalogViewController.m in Sources */,
