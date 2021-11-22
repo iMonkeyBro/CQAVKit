@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign, readonly) BOOL isHasFlash; ///< 相机是否有闪光灯
 @property (nonatomic, assign) AVCaptureTorchMode torchMode; ///< 手电筒模式
 @property (nonatomic, assign) AVCaptureFlashMode flashMode; ///< 闪光灯模式
-@property (nonatomic, assign, readonly) BOOL isSupportTapFocus;  ///< 相机是否支持点击聚焦
+@property (nonatomic, assign, readonly) BOOL isSupportTapFocus;  ///< 相机是否支持点击聚焦，例如一些设备的前置是不支持的
 @property (nonatomic, assign, readonly) BOOL isSupportTapExpose; ///< 相机是否支持点击曝光
 
 #pragma mark - Func 设置会话
