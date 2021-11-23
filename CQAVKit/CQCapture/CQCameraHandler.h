@@ -84,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)exposeAtPoint:(CGPoint)point;
 /**
- 重置对焦和曝光
+ 重置对焦和曝光,将对焦点和曝光点设为中心，并将对焦和曝光模式设为自动
  */
 - (void)resetFocusAndExposureModes;
 

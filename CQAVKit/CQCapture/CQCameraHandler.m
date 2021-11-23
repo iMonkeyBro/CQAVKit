@@ -7,7 +7,8 @@
 
 #import "CQCameraHandler.h"
 #import <AVFoundation/AVFoundation.h>
-
+#import <UIKit/UIKit.h>
+#import <AssetsLibrary/AssetsLibrary.h>
 
 static const NSString *CameraAdjustingExposureContext;
 
@@ -23,7 +24,61 @@ static const NSString *CameraAdjustingExposureContext;
 
 @implementation CQCameraHandler
 
-#pragma mark - Func 设置会话
+#pragma mark - Getter
+- (NSUInteger)cameraCount {
+    return [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] count];
+}
+
+- (BOOL)isHasFlash {
+    return [[self getActiveCamera] hasFlash];
+}
+
+- (BOOL)isHasTorch {
+    return [[self getActiveCamera] hasTorch];
+}
+
+- (BOOL)isSupportTapFocus {
+    return [self getActiveCamera].isFocusPointOfInterestSupported;
+}
+
+- (BOOL)isSupportTapExpose {
+    return [self getActiveCamera].isExposurePointOfInterestSupported;
+}
+
+- (AVCaptureFlashMode)flashMode {
+    return [[self getActiveCamera] flashMode];
+}
+
+- (AVCaptureTorchMode)torchMode {
+    return [[self getActiveCamera] torchMode];
+}
+
+#pragma mark - Setter
+- (void)setFlashMode:(AVCaptureFlashMode)flashMode {
+    AVCaptureDevice *device = [self getActiveCamera];
+    if (![device isFlashModeSupported:flashMode]) return;
+    NSError *error;
+    if ([device lockForConfiguration:&error]) {
+        device.flashMode = flashMode;
+        [device unlockForConfiguration];
+    } else {
+        [self.delegate deviceConfigurationFailedWithError:error];
+    }
+}
+
+- (void)setTorchMode:(AVCaptureTorchMode)torchMode {
+    AVCaptureDevice *device = [self getActiveCamera];
+    if (![device isTorchModeSupported:torchMode]) return;
+    NSError *error;
+    if ([device lockForConfiguration:&error]) {
+        device.torchMode = torchMode;
+        [device unlockForConfiguration];
+    } else {
+        [self.delegate deviceConfigurationFailedWithError:error];
+    }
+}
+
+#pragma mark - Public Func 设置会话
 // 设置会话，设置分辨率，并将输入输出添加到会话中
 - (BOOL)setupSession:(NSError * _Nullable *)error {
     // 创建捕捉会话 AVCaptureSession 是捕捉场景的中心枢纽
@@ -106,7 +161,7 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
-#pragma mark - Func 镜头切换
+#pragma mark - Public Func 镜头切换
 /// 根据position拿到摄像头
 - (AVCaptureDevice *)getCameraWithPosition:(AVCaptureDevicePosition)position {
     NSArray<AVCaptureDevice *> *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
@@ -178,11 +233,8 @@ static const NSString *CameraAdjustingExposureContext;
     return self.cameraCount > 1;
 }
 
-- (NSUInteger)cameraCount {
-    return [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] count];
-}
 
-#pragma mark - Func 对焦&曝光
+#pragma mark - Public Func 对焦&曝光
 
 /**
  AVCaptureDevice定义了很多方法，让开发者控制ios设备上的摄像头。可以独立调整和锁定摄像头的焦距、曝光、白平衡。对焦和曝光可以基于特定的兴趣点进行设置，使其在应用中实现点击对焦、点击曝光的功能。
@@ -266,17 +318,93 @@ static const NSString *CameraAdjustingExposureContext;
 // 重置对焦和曝光
 - (void)resetFocusAndExposureModes {
     AVCaptureDevice *device = [self getActiveCamera];
-    
+    // 摄像头是否支持兴趣点对焦 & 是否支持自动对焦模式 ,不支持不操作，玩手动对焦的需求另说
+    BOOL canResetFocus = device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus];
+    // 摄像头是否支持兴趣点曝光 & 是否支持自动曝光模式 ,不支持不操作，玩手动曝光的需求另说
+    BOOL canResetExposure = device.isExposurePointOfInterestSupported && [device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure];
+    // 捕捉设备空间左上角（0，0），右下角（1，1） 中心点则（0.5，0.5）
+    CGPoint centerPoint = CGPointMake(0.5f, 0.5f);
+    NSError *error;
+    //锁定设备，准备配置
+    if ([device lockForConfiguration:&error]) {
+        // 将对焦点和曝光点设为中心，并将对焦和曝光模式设为自动
+        if (canResetFocus) {
+            device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
+            device.focusPointOfInterest = centerPoint;
+        }
+        if (canResetExposure) {
+            device.exposureMode = AVCaptureExposureModeContinuousAutoExposure;
+            device.exposurePointOfInterest = centerPoint;
+        }
+        //释放锁定
+        [device unlockForConfiguration];
+    } else {
+        [self.delegate deviceConfigurationFailedWithError:error];
+    }
 }
 
-#pragma mark - Func 图片&视频捕捉
-
-
+#pragma mark - Public Func 图片捕捉
 // 捕捉静态图片
 - (void)captureStillImage {
-    
+    // 获取图片输出连接
+    AVCaptureConnection *connection = [self.imageOutput connectionWithMediaType:AVMediaTypeVideo];
+    // 即使程序只支持纵向，但是如果用户横向拍照时，需要调整结果照片的方向
+    // 判断是否支持设置视频方向， 支持则根据设备方向设置输出方向值
+    if (connection.isVideoOrientationSupported) {
+        connection.videoOrientation = [self getCurrentVideoOrientation];
+    }
+    [self.imageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^(CMSampleBufferRef  _Nullable imageDataSampleBuffer, NSError * _Nullable error) {
+        if (imageDataSampleBuffer != NULL) {
+            // CMSampleBufferRef转UIImage 并写入相册
+            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+            UIImage *image = [[UIImage alloc] initWithData:imageData];
+            [self writeImageToAssetsLibrary:image];
+        } else {
+            NSLog(@"NULL sampleBuffer:%@",[error localizedDescription]);
+        }
+    }];
 }
 
+#pragma mark - Private Func 图片捕捉
+/// 根据设备方向获取图像方向
+- (AVCaptureVideoOrientation)getCurrentVideoOrientation {
+    AVCaptureVideoOrientation orientation ;
+    switch ([UIDevice currentDevice].orientation) {
+        case UIDeviceOrientationPortrait:
+            orientation = AVCaptureVideoOrientationPortrait;
+            break;
+        case UIDeviceOrientationLandscapeRight:
+            orientation = AVCaptureVideoOrientationLandscapeLeft;
+            break;
+        case UIDeviceOrientationPortraitUpsideDown:
+            orientation = AVCaptureVideoOrientationPortraitUpsideDown;
+            break;
+        default:
+            orientation = AVCaptureVideoOrientationLandscapeRight;
+            break;
+    }
+    return orientation;
+}
+
+/**
+ Assets Library 框架
+ 用来让开发者通过代码方式访问iOS photo
+ 注意：会访问到相册，需要修改plist 权限。否则会导致项目崩溃
+ */
+
+/// 将UIImage写入到用户相册
+- (void)writeImageToAssetsLibrary:(UIImage *)image {
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(NSUInteger)image.imageOrientation completionBlock:^(NSURL *assetURL, NSError *error) {
+        if (!error) {
+            // TODO: 写入成功
+        } else {
+            NSLog(@"%@",[error localizedDescription]);
+        }
+    }];
+}
+
+#pragma mark - Func 视频捕捉
 // 开始录制视频
 - (void)startRecordingVideo {
     
@@ -296,6 +424,8 @@ static const NSString *CameraAdjustingExposureContext;
 - (CMTime)recordedDuration {
     return kCMTimeZero;
 }
+
+
 
 #pragma mark - Lazy Load
 - (dispatch_queue_t)videoQueue {
