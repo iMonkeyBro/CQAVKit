@@ -230,7 +230,7 @@ static const NSString *CameraAdjustingExposureContext;
         device.exposureMode = AVCaptureExposureModeContinuousAutoExposure;
         //判断设备是否支持锁定曝光的模式。
         if ([device isExposureModeSupported:AVCaptureExposureModeLocked]) {
-            //支持，则使用kvo确定设备的adjustingExposure属性的状态。
+            // 支持，则使用kvo确定设备的adjustingExposure属性的状态。
             [device addObserver:self forKeyPath:@"adjustingExposure" options:NSKeyValueObservingOptionNew context:&CameraAdjustingExposureContext];
         }
         // 释放锁定
@@ -245,11 +245,27 @@ static const NSString *CameraAdjustingExposureContext;
     if (context == &CameraAdjustingExposureContext) {
         //获取device
         AVCaptureDevice *device = (AVCaptureDevice *)object;
+        // 设备不再调整曝光等级，说明自动调节曝光结束，并且支持设置为AVCaptureExposureModeLocked
+        if(!device.isAdjustingExposure && [device isExposureModeSupported:AVCaptureExposureModeLocked]) {
+            // 使用一次监听，立即移除通知
+            [object removeObserver:self forKeyPath:@"adjustingExposure" context:&CameraAdjustingExposureContext];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSError *error;
+                if ([device lockForConfiguration:&error]) {
+                    // 锁定曝光
+                    device.exposureMode = AVCaptureExposureModeLocked;
+                    [device unlockForConfiguration];
+                } else {
+                    [self.delegate deviceConfigurationFailedWithError:error];
+                }
+            });
+        }
     }
 }
 
 // 重置对焦和曝光
 - (void)resetFocusAndExposureModes {
+    AVCaptureDevice *device = [self getActiveCamera];
     
 }
 
