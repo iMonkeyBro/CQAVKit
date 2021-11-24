@@ -9,10 +9,11 @@
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 #import <AssetsLibrary/AssetsLibrary.h>
+#import "NSFileManager+CQ.h"
 
 static const NSString *CameraAdjustingExposureContext;
 
-@interface CQCameraHandler ()
+@interface CQCameraHandler ()<AVCaptureFileOutputRecordingDelegate>
 @property (nonatomic, strong) dispatch_queue_t videoQueue; ///< 视频队列
 @property (nonatomic, strong) AVCaptureSession *captureSession; ///< 捕捉会话
 /// captureSession下活跃的视频输入,一个捕捉会话下会有很多，设置个成员变量方便拿
@@ -429,8 +430,9 @@ static const NSString *CameraAdjustingExposureContext;
             [self.delegate deviceConfigurationFailedWithError:error];
         }
     }
+    self.outputURL = [self getTempPathURL];
     // 开始录制 参数1:录制保存路径  参数2:代理
-    [self.movieOutput startRecordingToOutputFileURL:nil recordingDelegate:self];
+    [self.movieOutput startRecordingToOutputFileURL:self.outputURL recordingDelegate:self];
 }
 
 // 停止录制视频
@@ -451,10 +453,59 @@ static const NSString *CameraAdjustingExposureContext;
 }
 
 #pragma mark - Private Func 视频捕捉
+// 临时路径URL
+- (NSURL *)getTempPathURL {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *tempPath = [fileManager temporaryDirectoryWithTemplateString:@"video.XXXXXXXXXX"];
+    if (tempPath) {
+        NSString *filePath = [tempPath stringByAppendingPathComponent:@"temp_video.mov"];
+        return [NSURL URLWithString:filePath];
+    }
+    return nil;
+}
 
+/// 将视频写入到用户相册
+- (void)writeVideoToAssetsLibrary:(NSURL *)videoURL {
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    // 和图片不同，视频的写入更耗时，所以写入之前应该判断是否能写入
+    if (![library videoAtPathIsCompatibleWithSavedPhotosAlbum:videoURL]) return;
+    [library writeVideoAtPathToSavedPhotosAlbum:videoURL completionBlock:^(NSURL *assetURL, NSError *error) {
+        if (error) {
+            [self.delegate assetLibraryWriteFailedWithError:error];
+        } else {
+            // TODO: 写入成功 回调封面图
+        }
+    }];
+}
+
+/// 获取封面图
+- (void)getVideoCoverImageWithVideoURL:(NSURL *)videoURL callBlock:(void(^)(UIImage *))callBlock {
+    dispatch_async(self.videoQueue, ^{
+        AVAsset *asset = [AVAsset assetWithURL:videoURL];
+        AVAssetImageGenerator *imageGenerator = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
+        // 设置maximumSize 宽为100，高为0 根据视频的宽高比来计算图片的高度
+        imageGenerator.maximumSize = CGSizeMake(100.0f, 0.0f);
+        // 捕捉视频缩略图会考虑视频的变化（如视频的方向变化），如果不设置，缩略图的方向可能出错
+        imageGenerator.appliesPreferredTrackTransform = YES;
+        CGImageRef imageRef = [imageGenerator copyCGImageAtTime:kCMTimeZero actualTime:NULL error:nil];
+        UIImage *image = [UIImage imageWithCGImage:imageRef];
+        CGImageRelease(imageRef);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            !callBlock ?: callBlock(image);
+        });
+    });
+}
 
 #pragma mark - AVCaptureFileOutputRecordingDelegate
-
+- (void)captureOutput:(AVCaptureFileOutput *)output didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray<AVCaptureConnection *> *)connections error:(NSError *)error {
+    if (!error) {
+        [self.delegate mediaCaptureFailedWithError:error];
+    } else {
+        // copy一个副本再置为nil
+        [self writeVideoToAssetsLibrary:self.outputURL.copy];
+        self.outputURL = nil;
+    }
+}
 
 #pragma mark - Lazy Load
 - (dispatch_queue_t)videoQueue {
