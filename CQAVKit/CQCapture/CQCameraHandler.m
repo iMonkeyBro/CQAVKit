@@ -397,34 +397,63 @@ static const NSString *CameraAdjustingExposureContext;
     ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(NSUInteger)image.imageOrientation completionBlock:^(NSURL *assetURL, NSError *error) {
         if (!error) {
-            // TODO: 写入成功
+            // TODO: 写入成功，回调
         } else {
             NSLog(@"%@",[error localizedDescription]);
         }
     }];
 }
 
-#pragma mark - Func 视频捕捉
+#pragma mark - Public Func 视频捕捉
 // 开始录制视频
 - (void)startRecordingVideo {
-    
+    if ([self isRecordingVideo]) return;
+    AVCaptureConnection *videoConnection = [self.movieOutput connectionWithMediaType:AVMediaTypeVideo];
+    // 即使程序只支持纵向，但是如果用户横向拍照时，需要调整结果照片的方向
+    // 判断是否支持设置视频方向， 支持则根据设备方向设置输出方向值
+    if (videoConnection.isVideoOrientationSupported) {
+        videoConnection.videoOrientation = [self getCurrentVideoOrientation];
+    }
+    // 判断是否支持视频稳定 可以显著提高视频的质量。只会在录制视频文件涉及
+    if (videoConnection.isVideoStabilizationSupported) {
+        videoConnection.enablesVideoStabilizationWhenAvailable = YES;
+    }
+    AVCaptureDevice *device = [self getActiveCamera];
+    // 摄像头可以进行平滑对焦模式操作。即减慢摄像头镜头对焦速度。当用户移动拍摄时摄像头会尝试快速自动对焦。
+    if (device.isSmoothAutoFocusEnabled) {
+        NSError *error;
+        if ([device lockForConfiguration:&error]) {
+            device.smoothAutoFocusEnabled = YES;
+            [device unlockForConfiguration];
+        } else {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
+    }
+    // 开始录制 参数1:录制保存路径  参数2:代理
+    [self.movieOutput startRecordingToOutputFileURL:nil recordingDelegate:self];
 }
 
 // 停止录制视频
 - (void)stopRecordingVideo {
-    
+    if ([self isRecordingVideo]) {
+        [self.movieOutput stopRecording];
+    }
 }
 
 // 是否在录制视频
 - (BOOL)isRecordingVideo {
-    return YES;
+    return self.movieOutput.isRecording;
 }
 
 // 录制视频的时间
 - (CMTime)recordedDuration {
-    return kCMTimeZero;
+    return self.movieOutput.recordedDuration;
 }
 
+#pragma mark - Private Func 视频捕捉
+
+
+#pragma mark - AVCaptureFileOutputRecordingDelegate
 
 
 #pragma mark - Lazy Load
