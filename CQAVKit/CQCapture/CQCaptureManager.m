@@ -5,7 +5,7 @@
 //  Created by 刘超群 on 2021/10/29.
 //
 
-#import "CQCameraHandler.h"
+#import "CQCaptureManager.h"
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 #import <AssetsLibrary/AssetsLibrary.h>
@@ -13,7 +13,7 @@
 
 static const NSString *CameraAdjustingExposureContext;
 
-@interface CQCameraHandler ()<AVCaptureFileOutputRecordingDelegate>
+@interface CQCaptureManager ()<AVCaptureFileOutputRecordingDelegate>
 @property (nonatomic, strong) dispatch_queue_t videoQueue; ///< 视频队列
 @property (nonatomic, strong) AVCaptureSession *captureSession; ///< 捕捉会话
 /// captureSession下活跃的视频输入,一个捕捉会话下会有很多，设置个成员变量方便拿
@@ -23,7 +23,7 @@ static const NSString *CameraAdjustingExposureContext;
 @property (nonatomic, strong) NSURL *outputURL;  ///< 输出URL
 @end
 
-@implementation CQCameraHandler
+@implementation CQCaptureManager
 
 #pragma mark - Getter
 - (NSUInteger)cameraCount {
@@ -63,7 +63,9 @@ static const NSString *CameraAdjustingExposureContext;
         device.flashMode = flashMode;
         [device unlockForConfiguration];
     } else {
-        [self.delegate deviceConfigurationFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
     }
 }
 
@@ -75,7 +77,9 @@ static const NSString *CameraAdjustingExposureContext;
         device.torchMode = torchMode;
         [device unlockForConfiguration];
     } else {
-        [self.delegate deviceConfigurationFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
     }
 }
 
@@ -224,7 +228,9 @@ static const NSString *CameraAdjustingExposureContext;
         return YES;
     } else {
         // 创建AVCaptureDeviceInput 出现错误，回调该错误
-        [self.delegate deviceConfigurationFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
         return NO;
     }
 }
@@ -264,7 +270,9 @@ static const NSString *CameraAdjustingExposureContext;
         [device unlockForConfiguration];
     } else {
         // 锁定错误时，回调错误处理代理
-        [self.delegate deviceConfigurationFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
     }
 }
 
@@ -290,7 +298,9 @@ static const NSString *CameraAdjustingExposureContext;
         [device unlockForConfiguration];
     } else {
         // 锁定错误时，回调错误处理代理
-        [self.delegate deviceConfigurationFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
     }
 }
 
@@ -309,7 +319,9 @@ static const NSString *CameraAdjustingExposureContext;
                     device.exposureMode = AVCaptureExposureModeLocked;
                     [device unlockForConfiguration];
                 } else {
-                    [self.delegate deviceConfigurationFailedWithError:error];
+                    if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+                        [self.delegate deviceConfigurationFailedWithError:error];
+                    }
                 }
             });
         }
@@ -340,7 +352,9 @@ static const NSString *CameraAdjustingExposureContext;
         //释放锁定
         [device unlockForConfiguration];
     } else {
-        [self.delegate deviceConfigurationFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+            [self.delegate deviceConfigurationFailedWithError:error];
+        }
     }
 }
 
@@ -361,6 +375,9 @@ static const NSString *CameraAdjustingExposureContext;
             UIImage *image = [[UIImage alloc] initWithData:imageData];
             [self writeImageToAssetsLibrary:image];
         } else {
+            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureFailedWithError:)]) {
+                [self.delegate mediaCaptureFailedWithError:error];
+            }
             NSLog(@"NULL sampleBuffer:%@",[error localizedDescription]);
         }
     }];
@@ -398,9 +415,14 @@ static const NSString *CameraAdjustingExposureContext;
     ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(NSUInteger)image.imageOrientation completionBlock:^(NSURL *assetURL, NSError *error) {
         if (!error) {
-            // TODO: 写入成功，回调
+            // 写入成功，回调
+            if (self.delegate && [self.delegate respondsToSelector:@selector(writeImageSuccessWithImage:)]) {
+                [self.delegate writeImageSuccessWithImage:image];
+            }
         } else {
-            NSLog(@"%@",[error localizedDescription]);
+            if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteFailedWithError:)]) {
+                [self.delegate assetLibraryWriteFailedWithError:error];
+            }
         }
     }];
 }
@@ -427,7 +449,9 @@ static const NSString *CameraAdjustingExposureContext;
             device.smoothAutoFocusEnabled = YES;
             [device unlockForConfiguration];
         } else {
-            [self.delegate deviceConfigurationFailedWithError:error];
+            if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+                [self.delegate deviceConfigurationFailedWithError:error];
+            }
         }
     }
     self.outputURL = [self getTempPathURL];
@@ -471,9 +495,16 @@ static const NSString *CameraAdjustingExposureContext;
     if (![library videoAtPathIsCompatibleWithSavedPhotosAlbum:videoURL]) return;
     [library writeVideoAtPathToSavedPhotosAlbum:videoURL completionBlock:^(NSURL *assetURL, NSError *error) {
         if (error) {
-            [self.delegate assetLibraryWriteFailedWithError:error];
+            if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteFailedWithError:)]) {
+                [self.delegate assetLibraryWriteFailedWithError:error];
+            }
         } else {
-            // TODO: 写入成功 回调封面图
+            // 写入成功 回调封面图
+            [self getVideoCoverImageWithVideoURL:videoURL callBlock:^(UIImage *coverImage) {
+                if (self.delegate && [self.delegate respondsToSelector:@selector(writeVideoSuccessWithCoverImage:)]) {
+                    [self.delegate writeVideoSuccessWithCoverImage:coverImage];
+                }
+            }];
         }
     }];
 }
@@ -499,7 +530,9 @@ static const NSString *CameraAdjustingExposureContext;
 #pragma mark - AVCaptureFileOutputRecordingDelegate
 - (void)captureOutput:(AVCaptureFileOutput *)output didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray<AVCaptureConnection *> *)connections error:(NSError *)error {
     if (!error) {
-        [self.delegate mediaCaptureFailedWithError:error];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureFailedWithError:)]) {
+            [self.delegate mediaCaptureFailedWithError:error];
+        }
     } else {
         // copy一个副本再置为nil
         [self writeVideoToAssetsLibrary:self.outputURL.copy];

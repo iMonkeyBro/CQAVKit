@@ -7,34 +7,45 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVCaptureDevice.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-#pragma mark - CQCameraHandlerDelegate
-@protocol CQCameraHandlerDelegate<NSObject>
+#pragma mark - CQCaptureManagerDelegate
+@protocol CQCaptureManagerDelegate<NSObject>
 
 /**
- 设备配置错误
+ 设备配置错误，创建AVCaptureDeviceInput出错 / lockForConfiguration出错
  @param error 错误信息
  */
 - (void)deviceConfigurationFailedWithError:(NSError *)error;
 /**
- 媒体捕捉错误
+ 媒体捕捉错误，捕捉照片或视频时出现错误
  @param error 错误信息
  */
 - (void)mediaCaptureFailedWithError:(NSError *)error;
 /**
- 资源库写入错误
+ 资源库写入错误，将图片或视频写入相册时出现错误
  @param error 错误信息
  */
 - (void)assetLibraryWriteFailedWithError:(NSError *)error;
+/**
+ 写入图片成功
+ @param image 被写入的图片
+ */
+- (void)writeImageSuccessWithImage:(UIImage *)image;
+/**
+ 写入视频成功
+ @param coverImage 视频封面图片
+ */
+- (void)writeVideoSuccessWithCoverImage:(UIImage *)coverImage;
 
 @end
 
-#pragma mark - CQCameraHandler
-@interface CQCameraHandler : NSObject
+#pragma mark - CQCaptureManager
+@interface CQCaptureManager : NSObject
 
-@property (nonatomic, weak) id<CQCameraHandlerDelegate> delegate;
+@property (nonatomic, weak) id<CQCaptureManagerDelegate> delegate;
 
 #pragma mark - Property Device Support
 @property (nonatomic, assign, readonly) NSUInteger cameraCount;  ///< 摄像头数量
