@@ -1,5 +1,5 @@
 //
-//  CQCameraHandler.m
+//  CQCaptureManager.m
 //  CQAVKit
 //
 //  Created by 刘超群 on 2021/10/29.
