@@ -9,11 +9,13 @@
 #import <AVFoundation/AVCaptureDevice.h>
 #import <UIKit/UIKit.h>
 
+@class AVCaptureSession;
+
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - CQCaptureManagerDelegate
 @protocol CQCaptureManagerDelegate<NSObject>
-
+@optional
 /**
  设备配置错误，创建AVCaptureDeviceInput出错 / lockForConfiguration出错
  @param error 错误信息
@@ -46,6 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CQCaptureManager : NSObject
 
 @property (nonatomic, weak) id<CQCaptureManagerDelegate> delegate;
+
+@property (nonatomic, strong, readonly) AVCaptureSession *captureSession; ///< 捕捉会话
 
 #pragma mark - Property Device Support
 @property (nonatomic, assign, readonly) NSUInteger cameraCount;  ///< 摄像头数量

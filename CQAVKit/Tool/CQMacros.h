@@ -76,9 +76,9 @@
 
 // 线程
 // 异步子线程
-#define st_async_global_queue(block) dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), block)
+#define cq_async_global_queue(block) dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), block)
 // 保证异步主线程
-#define st_async_main_safe(block)\
+#define cq_async_main_safe(block)\
 if ([NSThread isMainThread]) {\
 block();\
 } else {\

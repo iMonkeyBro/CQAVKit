@@ -47,23 +47,23 @@
 - (void)singleTapAction:(UITapGestureRecognizer *)sender {
     CGPoint point = [sender locationInView:self];
     [self runBoxViewAnimation:self.focusBoxView atPoint:point];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(tapFocusAtPoint:)]) {
-        [self.delegate tapFocusAtPoint:point];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(didTapFocusAtPoint:)]) {
+        [self.delegate didTapFocusAtPoint:point];
     }
 }
 
 - (void)doubleTapAction:(UITapGestureRecognizer *)sender {
     CGPoint point = [sender locationInView:self];
     [self runBoxViewAnimation:self.exposureBoxView atPoint:point];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(tapExposeAtPoint:)]) {
-        [self.delegate tapExposeAtPoint:point];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(didTapExposeAtPoint:)]) {
+        [self.delegate didTapExposeAtPoint:point];
     }
 }
 
 - (void)doubleDoubleTapAction:(UITapGestureRecognizer *)sender {
     [self runResetAnimation];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(tapResetFocusAndExposure)]) {
-        [self.delegate tapResetFocusAndExposure];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(didTapResetFocusAndExposure)]) {
+        [self.delegate didTapResetFocusAndExposure];
     }
 }
 

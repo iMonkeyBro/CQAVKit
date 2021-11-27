@@ -11,12 +11,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol CQCapturePreviewViewDelegate<NSObject>
-/// 点击对焦
-- (void)tapFocusAtPoint:(CGPoint)point;
-/// 点击曝光
-- (void)tapExposeAtPoint:(CGPoint)point;
-/// 点击重置聚焦&曝光
-- (void)tapResetFocusAndExposure;
+@optional
+/// 当点击对焦
+- (void)didTapFocusAtPoint:(CGPoint)point;
+/// 当点击曝光
+- (void)didTapExposeAtPoint:(CGPoint)point;
+/// 当点击重置聚焦&曝光
+- (void)didTapResetFocusAndExposure;
 @end
 
 @interface CQCapturePreviewView : UIView
@@ -24,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) id<CQCapturePreviewViewDelegate> delegate;
 
 //session用来关联AVCaptureVideoPreviewLayer 和 激活AVCaptureSession
-@property (nonatomic, strong, readonly) AVCaptureSession *session;
+@property (nonatomic, strong) AVCaptureSession *session;
 
 @property (nonatomic, assign) BOOL isFocusEnabled;  ///< 是否聚焦
 @property (nonatomic, assign) BOOL isExposeEnabled;  ///< 是否曝光

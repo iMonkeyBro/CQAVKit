@@ -9,6 +9,6 @@
 #define PrefixHeader_pch
 
 #import "CQMacros.h"
-
+#import <Masonry/Masonry.h>
 
 #endif /* PrefixHeader_pch */
