@@ -22,25 +22,41 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)deviceConfigurationFailedWithError:(NSError *)error;
 /**
+ 切换相机成功
+ */
+- (void)switchCameraSuccess;
+/**
+ 切换相机失败
+ */
+- (void)switchCameraFailed;
+/**
  媒体捕捉错误，捕捉照片或视频时出现错误
  @param error 错误信息
  */
 - (void)mediaCaptureFailedWithError:(NSError *)error;
+/**
+ 媒体捕捉图片成功
+ */
+- (void)mediaCaptureImageSuccess;
+/**
+ 媒体捕捉视频成功
+ */
+- (void)mediaCaptureVideoSuccess;
 /**
  资源库写入错误，将图片或视频写入相册时出现错误
  @param error 错误信息
  */
 - (void)assetLibraryWriteFailedWithError:(NSError *)error;
 /**
- 写入图片成功
+ 资源库写入图片成功
  @param image 被写入的图片
  */
-- (void)writeImageSuccessWithImage:(UIImage *)image;
+- (void)assetLibraryWriteImageSuccessWithImage:(UIImage *)image;
 /**
- 写入视频成功
+ 资源库写入视频成功
  @param coverImage 视频封面图片
  */
-- (void)writeVideoSuccessWithCoverImage:(UIImage *)coverImage;
+- (void)assetLibraryWriteVideoSuccessWithCoverImage:(UIImage *)coverImage;
 
 @end
 
@@ -55,8 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign, readonly) NSUInteger cameraCount;  ///< 摄像头数量
 @property (nonatomic, assign, readonly) BOOL isHasTorch; ///< 相机是否有手电筒
 @property (nonatomic, assign, readonly) BOOL isHasFlash; ///< 相机是否有闪光灯
-@property (nonatomic, assign) AVCaptureTorchMode torchMode; ///< 手电筒模式
-@property (nonatomic, assign) AVCaptureFlashMode flashMode; ///< 闪光灯模式
+@property (nonatomic, assign) AVCaptureTorchMode torchMode; ///< 手电筒模式,0关 1开，立即生效
+@property (nonatomic, assign) AVCaptureFlashMode flashMode; ///< 闪光灯模式,0关 1开 2自动，仅按下快门时有效
 @property (nonatomic, assign, readonly) BOOL isSupportTapFocus;  ///< 相机是否支持点击聚焦，例如一些设备的前置是不支持的
 @property (nonatomic, assign, readonly) BOOL isSupportTapExpose; ///< 相机是否支持点击曝光
 

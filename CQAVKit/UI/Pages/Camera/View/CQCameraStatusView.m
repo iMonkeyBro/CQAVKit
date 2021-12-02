@@ -9,6 +9,7 @@
 
 @interface CQCameraStatusView ()
 @property (nonatomic, strong) UIButton *flashBtn;  ///< 闪光灯按钮
+
 @property (nonatomic, strong) UILabel *timeLabel;  ///< 时间label
 @property (nonatomic, strong) UIButton *switchCameraBtn;  ///< 切换相机按钮
 
@@ -23,6 +24,18 @@
         
     }
     return self;
+}
+
+#pragma mark - Set
+- (void)setFlashMode:(NSInteger)flashMode {
+    _flashMode = flashMode;
+    if (flashMode == 0 ) {
+        [self.flashBtn setTitle:@"OFF" forState:UIControlStateNormal];
+    } else if (flashMode == 1 ) {
+        [self.flashBtn setTitle:@"ON" forState:UIControlStateNormal];
+    } else if (flashMode == 2 ) {
+        [self.flashBtn setTitle:@"AUTO" forState:UIControlStateNormal];
+    }
 }
 
 #pragma mark - Event

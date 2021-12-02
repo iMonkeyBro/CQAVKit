@@ -221,18 +221,24 @@ static const NSString *CameraAdjustingExposureContext;
     if (newVideoInput != nil) {
         // 开始配置 标注原始配置要发生改变
         [self.captureSession beginConfiguration];
-        // TODO: 是不是移除了才能加新的？
-        // FIXME: 是不是移除了才能加新的？
-        // 将捕捉会话中，原本的捕捉输入设备移除
+        // 将捕捉会话中，原本的捕捉输入设备移除，不移除不能添加新的
         [self.captureSession removeInput:self.videoDeviceInput];
         if ([self.captureSession canAddInput:newVideoInput]) {
             [self.captureSession addInput:newVideoInput];
             self.videoDeviceInput = newVideoInput;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(switchCameraSuccess)]) {
+                    [self.delegate switchCameraSuccess];
+                }
+            });
         } else {
-            // !!!: 是不是要给个回调？
-            // ???: 是不是要给个回调？
             // 已经移除了，还是无法添加新设备，则将原本的视频捕捉设备重新加入到捕捉会话中
             [self.captureSession addInput:self.videoDeviceInput];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(switchCameraFailed)]) {
+                    [self.delegate switchCameraFailed];
+                }
+            });
         }
         // 提交配置，AVCaptureSession commitConfiguration 会分批的将所有变更整合在一起。
         [self.captureSession commitConfiguration];
@@ -387,9 +393,15 @@ static const NSString *CameraAdjustingExposureContext;
     }
     [self.imageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^(CMSampleBufferRef  _Nullable imageDataSampleBuffer, NSError * _Nullable error) {
         if (imageDataSampleBuffer != NULL) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureImageSuccess)]) {
+                    [self.delegate mediaCaptureImageSuccess];
+                }
+            });
             // CMSampleBufferRef转UIImage 并写入相册
             NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
             UIImage *image = [[UIImage alloc] initWithData:imageData];
+            
             [self writeImageToAssetsLibrary:image];
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -436,8 +448,8 @@ static const NSString *CameraAdjustingExposureContext;
     [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(NSUInteger)image.imageOrientation completionBlock:^(NSURL *assetURL, NSError *error) {
         if (!error) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.delegate && [self.delegate respondsToSelector:@selector(writeImageSuccessWithImage:)]) {
-                    [self.delegate writeImageSuccessWithImage:image];
+                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteImageSuccessWithImage:)]) {
+                    [self.delegate assetLibraryWriteImageSuccessWithImage:image];
                 }
             });
         } else {
@@ -529,8 +541,8 @@ static const NSString *CameraAdjustingExposureContext;
             // 写入成功 回调封面图
             [self getVideoCoverImageWithVideoURL:videoURL callBlock:^(UIImage *coverImage) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if (self.delegate && [self.delegate respondsToSelector:@selector(writeVideoSuccessWithCoverImage:)]) {
-                        [self.delegate writeVideoSuccessWithCoverImage:coverImage];
+                    if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteVideoSuccessWithCoverImage:)]) {
+                        [self.delegate assetLibraryWriteVideoSuccessWithCoverImage:coverImage];
                     }
                 });
             }];
@@ -565,6 +577,11 @@ static const NSString *CameraAdjustingExposureContext;
             }
         });
     } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureVideoSuccess)]) {
+                [self.delegate mediaCaptureVideoSuccess];
+            }
+        });
         // copy一个副本再置为nil
         [self writeVideoToAssetsLibrary:self.outputURL.copy];
         self.outputURL = nil;

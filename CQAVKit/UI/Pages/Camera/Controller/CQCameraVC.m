@@ -29,6 +29,14 @@
 }
 
 #pragma mark - CQCaptureManagerDelegate
+- (void)switchCameraSuccess {
+    
+}
+
+- (void)switchCameraFailed {
+    
+}
+
 - (void)deviceConfigurationFailedWithError:(NSError *)error {
     
 }
@@ -37,15 +45,28 @@
     
 }
 
+- (void)mediaCaptureImageSuccess {
+    [self.captureManager stopSession];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.captureManager startSession];
+    });
+}
+
+- (void)mediaCaptureVideoSuccess {
+    
+}
+
 - (void)assetLibraryWriteFailedWithError:(NSError *)error {
     
 }
 
-- (void)writeImageSuccessWithImage:(UIImage *)image {
-    
+- (void)assetLibraryWriteImageSuccessWithImage:(UIImage *)image {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.operateView.coverBtn setImage:image forState:UIControlStateNormal];
+    });
 }
 
-- (void)writeVideoSuccessWithCoverImage:(UIImage *)coverImage {
+- (void)assetLibraryWriteVideoSuccessWithCoverImage:(UIImage *)coverImage {
     
 }
 
@@ -67,6 +88,13 @@
     @weakify(self);
     self.statusView.flashBtnCallbackBlock = ^{
         @strongify(self);
+        if (self.statusView.flashMode < 2) {
+            self.captureManager.flashMode++;
+            self.statusView.flashMode++;
+        } else {
+            self.captureManager.flashMode = 0;
+            self.statusView.flashMode = 0;
+        }
     };
     self.statusView.switchCameraBtnCallbackBlock = ^{
         @strongify(self);
@@ -75,6 +103,14 @@
     self.operateView.shutterBtnCallbackBlock = ^{
         @strongify(self);
         [self.captureManager captureStillImage];
+    };
+    self.operateView.coverBtnCallbackBlock = ^{
+        float deviceVersion = [[[UIDevice currentDevice] systemVersion] floatValue];
+        if (deviceVersion < 10) {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"PHOTOS://"]];
+        }else{
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"photos-redirect://"] options:@{@"jn":@"s"} completionHandler:nil];
+        }
     };
 }
 
@@ -89,6 +125,8 @@
     }
     self.previewView.isFocusEnabled = self.captureManager.isSupportTapFocus;
     self.previewView.isExposeEnabled = self.captureManager.isSupportTapExpose;
+    self.captureManager.flashMode = 2;
+    self.statusView.flashMode = 2;
 }
 
 #pragma mark - UI
