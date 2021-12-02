@@ -25,7 +25,9 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
 
 #pragma mark - UITableViewDelegate, UITableViewDataSource
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
     UIViewController *vc = [NSClassFromString(self.dataList[indexPath.row][@"vc"]) new];
+    vc.title = self.dataList[indexPath.row][@"title"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 

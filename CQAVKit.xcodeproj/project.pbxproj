@@ -11,6 +11,9 @@
 		9059D5712751CA4D00661C42 /* CQCameraVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5702751CA4D00661C42 /* CQCameraVC.m */; };
 		9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5752751CB2600661C42 /* CQCameraOperateView.m */; };
 		9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5782751CB5300661C42 /* CQCameraStatusView.m */; };
+		90F2300A2758F1E900AFD137 /* CQScreenTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F230092758F1E900AFD137 /* CQScreenTool.m */; };
+		90F2300D2758F54F00AFD137 /* UIButton+CQExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F2300C2758F54F00AFD137 /* UIButton+CQExtension.m */; };
+		90F230102758FBA600AFD137 /* CQCameraShutterButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F2300F2758FBA600AFD137 /* CQCameraShutterButton.m */; };
 		977EE3F5D61272BCCD3E818D /* libPods-CQAVKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 50566FC1D7CC24CC0F39690C /* libPods-CQAVKit.a */; };
 		9D1FB5C6272B12AC00F74260 /* CQCaptureManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D1FB5C5272B12AC00F74260 /* CQCaptureManager.m */; };
 		9DC5068D2729B8C100FE7C27 /* CQCapturePreviewView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DC5068C2729B8C100FE7C27 /* CQCapturePreviewView.m */; };
@@ -55,6 +58,12 @@
 		9059D5752751CB2600661C42 /* CQCameraOperateView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraOperateView.m; sourceTree = "<group>"; };
 		9059D5772751CB5300661C42 /* CQCameraStatusView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraStatusView.h; sourceTree = "<group>"; };
 		9059D5782751CB5300661C42 /* CQCameraStatusView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraStatusView.m; sourceTree = "<group>"; };
+		90F230082758F1E900AFD137 /* CQScreenTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQScreenTool.h; sourceTree = "<group>"; };
+		90F230092758F1E900AFD137 /* CQScreenTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQScreenTool.m; sourceTree = "<group>"; };
+		90F2300B2758F54F00AFD137 /* UIButton+CQExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIButton+CQExtension.h"; sourceTree = "<group>"; };
+		90F2300C2758F54F00AFD137 /* UIButton+CQExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIButton+CQExtension.m"; sourceTree = "<group>"; };
+		90F2300E2758FBA600AFD137 /* CQCameraShutterButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraShutterButton.h; sourceTree = "<group>"; };
+		90F2300F2758FBA600AFD137 /* CQCameraShutterButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraShutterButton.m; sourceTree = "<group>"; };
 		9D1FB5C4272B12AC00F74260 /* CQCaptureManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCaptureManager.h; sourceTree = "<group>"; };
 		9D1FB5C5272B12AC00F74260 /* CQCaptureManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCaptureManager.m; sourceTree = "<group>"; };
 		9DC5068B2729B8C100FE7C27 /* CQCapturePreviewView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCapturePreviewView.h; sourceTree = "<group>"; };
@@ -135,6 +144,8 @@
 			children = (
 				901D5797274DE67C00AA415C /* NSFileManager+CQ.h */,
 				901D5798274DE67C00AA415C /* NSFileManager+CQ.m */,
+				90F2300B2758F54F00AFD137 /* UIButton+CQExtension.h */,
+				90F2300C2758F54F00AFD137 /* UIButton+CQExtension.m */,
 			);
 			path = Category;
 			sourceTree = "<group>";
@@ -164,6 +175,8 @@
 				9059D5782751CB5300661C42 /* CQCameraStatusView.m */,
 				9059D5742751CB2600661C42 /* CQCameraOperateView.h */,
 				9059D5752751CB2600661C42 /* CQCameraOperateView.m */,
+				90F2300E2758FBA600AFD137 /* CQCameraShutterButton.h */,
+				90F2300F2758FBA600AFD137 /* CQCameraShutterButton.m */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -298,6 +311,8 @@
 			children = (
 				901D5796274DE66300AA415C /* Category */,
 				9DF394BE2725CA6A0095E269 /* CQMacros.h */,
+				90F230082758F1E900AFD137 /* CQScreenTool.h */,
+				90F230092758F1E900AFD137 /* CQScreenTool.m */,
 			);
 			path = Tool;
 			sourceTree = "<group>";
@@ -485,8 +500,10 @@
 				9DF394BA2725C9C10095E269 /* AppDelegate+Init.m in Sources */,
 				9DF394C22725CAC10095E269 /* CQNavigationController.m in Sources */,
 				9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */,
+				90F2300D2758F54F00AFD137 /* UIButton+CQExtension.m in Sources */,
 				9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */,
 				901D5799274DE67C00AA415C /* NSFileManager+CQ.m in Sources */,
+				90F230102758FBA600AFD137 /* CQCameraShutterButton.m in Sources */,
 				9D1FB5C6272B12AC00F74260 /* CQCaptureManager.m in Sources */,
 				9DF394772725C5C10095E269 /* AppDelegate.m in Sources */,
 				9DF394882725C5C20095E269 /* main.m in Sources */,
@@ -495,6 +512,7 @@
 				9DF394B12725C85E0095E269 /* CQBaseViewController.m in Sources */,
 				9DC5068D2729B8C100FE7C27 /* CQCapturePreviewView.m in Sources */,
 				9DF394C52725CB530095E269 /* CQTestCaptureViewController.m in Sources */,
+				90F2300A2758F1E900AFD137 /* CQScreenTool.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
