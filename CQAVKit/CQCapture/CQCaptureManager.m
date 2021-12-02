@@ -128,7 +128,7 @@ static const NSString *CameraAdjustingExposureContext;
         return NO;
     }
     
-    // 添加音频捕捉设备
+    // 添加音频捕捉设备 ，如果只是拍摄静态图片，可以不用设置
     // 选择默认音频捕捉设备 即返回一个内置麦克风
     AVCaptureDevice *audioDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
     AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioDevice error:error];
@@ -138,7 +138,7 @@ static const NSString *CameraAdjustingExposureContext;
         return NO;
     }
 
-    // 设置输出(图片/视频)
+    // 设置输出(图片/视频) 根据需求可选
     // AVCaptureStillImageOutput 从摄像头捕捉静态图片
     self.imageOutput = [[AVCaptureStillImageOutput alloc] init];
     // 配置字典：希望捕捉到JPEG格式的图片
