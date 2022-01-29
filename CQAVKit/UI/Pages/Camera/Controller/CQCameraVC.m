@@ -6,6 +6,7 @@
 //
 
 #import "CQCameraVC.h"
+#import "CQAuthorizationTool.h"
 #import "CQCapturePreviewView.h"
 #import "CQCaptureManager.h"
 #import "CQCameraStatusView.h"
@@ -23,14 +24,25 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self configUI];
-    [self bindUIEvent];
-    [self configCaptureSession];
+    [CQAuthorizationTool checkCameraAuthorization:^(BOOL isAuthorization) {
+        [CQAuthorizationTool checkMicrophoneAuthorization:^(BOOL isAuthorization) {
+            if (isAuthorization) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self configUI];
+                    [self bindUIEvent];
+                    [self configCaptureSession];
+                });
+            }
+        }];
+    }];
 }
 
 #pragma mark - CQCaptureManagerDelegate
 - (void)switchCameraSuccess {
-    
+    self.previewView.isFocusEnabled = self.captureManager.isSupportTapFocus;
+    self.previewView.isExposeEnabled = self.captureManager.isSupportTapExpose;
+    self.captureManager.flashMode = AVCaptureFlashModeAuto;
+    self.statusView.flashMode = AVCaptureFlashModeAuto;
 }
 
 - (void)switchCameraFailed {
@@ -125,8 +137,8 @@
     }
     self.previewView.isFocusEnabled = self.captureManager.isSupportTapFocus;
     self.previewView.isExposeEnabled = self.captureManager.isSupportTapExpose;
-    self.captureManager.flashMode = 2;
-    self.statusView.flashMode = 2;
+    self.captureManager.flashMode = AVCaptureFlashModeAuto;
+    self.statusView.flashMode = AVCaptureFlashModeAuto;
 }
 
 #pragma mark - UI

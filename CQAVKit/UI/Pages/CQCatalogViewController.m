@@ -29,6 +29,7 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
     UIViewController *vc = [NSClassFromString(self.dataList[indexPath.row][@"vc"]) new];
     vc.title = self.dataList[indexPath.row][@"title"];
     [self.navigationController pushViewController:vc animated:YES];
+    
 }
 
 

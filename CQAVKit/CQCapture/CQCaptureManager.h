@@ -8,14 +8,30 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVCaptureDevice.h>
 #import <UIKit/UIKit.h>
+#import <CoreMedia/CMSampleBuffer.h>
 
 @class AVCaptureSession;
+
+
+typedef NS_ENUM(NSUInteger, CQCaptureType) {
+    CQCaptureTypeAll = 0,
+    CQCaptureTypeVideo = 1,
+    CQCaptureTypeAudio = 2,
+};
 
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - CQCaptureManagerDelegate
 @protocol CQCaptureManagerDelegate<NSObject>
 @optional
+
+/**
+ 当捕捉到信号时
+ @param sampleBuffer 捕捉到的buffer
+ @param type 捕捉类型
+ */
+- (void)captureSampleBuffer:(CMSampleBufferRef)sampleBuffer type:(CQCaptureType)type;
+
 /**
  设备配置错误，创建AVCaptureDeviceInput出错 / lockForConfiguration出错
  @param error 错误信息
@@ -62,6 +78,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - CQCaptureManager
 @interface CQCaptureManager : NSObject
+
+//- (instancetype)initWithType:(CCSystemCaptureType)type;
+//- (instancetype)init UNAVAILABLE_ATTRIBUTE;
+
+/**捕获视频的宽*/
+@property (nonatomic, assign, readonly) NSUInteger witdh;
+/**捕获视频的高*/
+@property (nonatomic, assign, readonly) NSUInteger height;
 
 @property (nonatomic, weak) id<CQCaptureManagerDelegate> delegate;
 
