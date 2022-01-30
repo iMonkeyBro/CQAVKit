@@ -136,6 +136,10 @@
     [(AVCaptureVideoPreviewLayer*)self.layer setSession:session];
 }
 
+- (void)setVideoGravity:(AVLayerVideoGravity)videoGravity {
+    [(AVCaptureVideoPreviewLayer*)self.layer setVideoGravity:videoGravity];
+}
+
 - (void)setIsFocusEnabled:(BOOL)isFocusEnabled {
     _isFocusEnabled = isFocusEnabled;
     self.singleTapRecognizer.enabled = isFocusEnabled;

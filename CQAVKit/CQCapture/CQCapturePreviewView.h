@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 //session用来关联AVCaptureVideoPreviewLayer 和 激活AVCaptureSession
 @property (nonatomic, strong) AVCaptureSession *session;
 
+@property (nonatomic, assign) AVLayerVideoGravity videoGravity;
+
 @property (nonatomic, assign) BOOL isFocusEnabled;  ///< 是否能点击聚焦，禁用将禁用点击聚焦的手势
 @property (nonatomic, assign) BOOL isExposeEnabled;  ///< 是否能曝光，禁用将禁用点击曝光的手势
 

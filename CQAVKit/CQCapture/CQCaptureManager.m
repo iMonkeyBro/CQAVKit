@@ -26,35 +26,548 @@ static const NSString *CameraAdjustingExposureContext;
 @property (nonatomic, strong) AVCaptureSession *captureSession; ///< 捕捉会话
 /*********视频相关**********/
 // captureSession下活跃的视频输入,一个捕捉会话下会有很多，设置个成员变量方便拿
+@property (nonatomic, assign) BOOL isConfigSessionPreset;  ///< 是否配置过分辨率
 @property (nonatomic, strong) AVCaptureDeviceInput *videoDeviceInput;  ///< 视频输入设备
-
-@property (nonatomic, strong) AVCaptureStillImageOutput *imageOutput;  ///< 图片输出
-@property (nonatomic, strong) AVCaptureMovieFileOutput *movieOutput;  ///< 电影输出
-@property (nonatomic, strong) NSURL *movieOutputURL;  ///< 输出URL
-
-@property (nonatomic, strong) AVCaptureVideoDataOutput *videoBufferOutput;
-@property (nonatomic, strong) AVCaptureConnection *videoBufferConnection;
-
+@property (nonatomic, strong) AVCaptureStillImageOutput *stillImageOutput;  ///< 图片输出
+@property (nonatomic, strong) AVCaptureMovieFileOutput *movieFileOutput;  ///< 电影输出
+@property (nonatomic, strong) NSURL *movieFileOutputURL;  ///< 输出URL
+@property (nonatomic, strong) AVCaptureVideoDataOutput *videoDataOutput;
 /*********音频相关**********/
 @property (nonatomic, strong) AVCaptureDeviceInput *audioDeviceInput;  ///< 音频输入设备
 //输出数据接收
 @property (nonatomic, strong) AVCaptureAudioDataOutput *audioDataOutput;
-@property (nonatomic, strong) AVCaptureConnection *audioConnection;
+
 
 @end
 
 @implementation CQCaptureManager
 
 #pragma mark - Init
+- (instancetype)init {
+    if (self = [super init]) {
+        // 创建捕捉会话 AVCaptureSession 是捕捉场景的中心枢纽
+        self.captureSession = [[AVCaptureSession alloc] init];
+    }
+    return self;
+}
+
 - (void)dealloc {
     NSLog(@"CQCaptureManager - dealloc !!!");
     [self destroyCaptureSession];
 }
 
-#pragma mark - AVCaptureVideo/AudioDataOutputSampleBufferDelegate
+/// 销毁会话
+- (void)destroyCaptureSession {
+    if (self.captureSession) {
+        if (self.audioDeviceInput) [self.captureSession removeInput:self.audioDeviceInput];
+        if (self.videoDeviceInput) [self.captureSession removeInput:self.videoDeviceInput];
+        if (self.stillImageOutput) [self.captureSession removeOutput:self.stillImageOutput];
+        if (self.movieFileOutput) [self.captureSession removeOutput:self.movieFileOutput];
+        if (self.videoDataOutput) [self.captureSession removeOutput:self.videoDataOutput];
+        if (self.audioDataOutput) [self.captureSession removeOutput:self.audioDataOutput];
+    }
+    self.captureSession = nil;
+}
 
+#pragma mark - Public Func 参数配置
+/// 配置捕捉会话的分辨率
+- (void)configSessionPreset:(AVCaptureSessionPreset)sessionPreset {
+    [self.captureSession beginConfiguration];
+    if ([self.captureSession canSetSessionPreset:sessionPreset])  {
+        self.captureSession.sessionPreset = sessionPreset;
+    } else {
+        self.captureSession.sessionPreset = AVCaptureSessionPresetMedium;
+    }
+    [self.captureSession commitConfiguration];
+    self.isConfigSessionPreset = YES;
+}
+
+/// 配置FPS
+- (void)configVideoFps:(NSUInteger)fps {
+    AVCaptureDevice *device = [self getActiveCamera];
+    //获取当前支持的最大fps
+    float maxRate = [(AVFrameRateRange *)[device.activeFormat.videoSupportedFrameRateRanges objectAtIndex:0] maxFrameRate];
+    //如果想要设置的fps小于或等于最大fps，就进行修改
+    if (maxRate >= fps) {
+        //实际修改fps的代码
+        if ([device lockForConfiguration:NULL]) {
+            device.activeVideoMinFrameDuration = CMTimeMake(10, (int)(fps * 10));
+            device.activeVideoMaxFrameDuration = device.activeVideoMinFrameDuration;
+            [device unlockForConfiguration];
+        }
+    }
+}
+
+#pragma mark - Func 视频输入输出配置
+/// 配置视频输入
+- (BOOL)configVideoInput:(NSError * _Nullable *)error {
+    // 添加视频捕捉设备
+    // 拿到默认视频捕捉设备 iOS默认后置摄像头
+    AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    // 将捕捉设备转化为AVCaptureDeviceInput
+    // 注意：会话不能直接使用AVCaptureDevice，必须将AVCaptureDevice封装成AVCaptureDeviceInput对象
+    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:error];
+    // 将捕捉设备添加给会话
+    // 使用前判断videoInput是否有效以及能否添加，因为摄像头是一个公共设备，不属于任何App，有可能别的App在使用，添加前应该先进行判断是否可以添加
+    if (videoInput && [self.captureSession canAddInput:videoInput]) {
+        // 将videoInput 添加到 captureSession中
+        [self.captureSession beginConfiguration];
+        [self.captureSession addInput:videoInput];
+        [self.captureSession commitConfiguration];
+        self.videoDeviceInput = videoInput;
+        return YES;
+    }else {
+        return NO;
+    }
+}
+
+- (void)removeVideoDeviceInput {
+    if (self.videoDeviceInput) [self.captureSession removeInput:self.videoDeviceInput];
+}
+
+/// 配置静态图片输出
+- (void)configStillImageOutput {
+    // AVCaptureStillImageOutput 从摄像头捕捉静态图片
+    self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+    // 配置字典：希望捕捉到JPEG格式的图片
+    self.stillImageOutput.outputSettings = @{AVVideoCodecKey:AVVideoCodecJPEG};
+    // 输出连接 判断是否可用，可用则添加到输出连接中去
+    [self.captureSession beginConfiguration];
+    if ([self.captureSession canAddOutput:self.stillImageOutput]) {
+        [self.captureSession addOutput:self.stillImageOutput];
+    }
+    [self.captureSession commitConfiguration];
+}
+
+- (void)removeStillImageOutput {
+    if (self.stillImageOutput) [self.captureSession removeOutput:self.stillImageOutput];
+}
+
+/// 配置电影文件输出
+- (void)configMovieFileOutput {
+    // AVCaptureMovieFileOutput，将QuickTime视频录制到文件系统
+    self.movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
+    [self.captureSession beginConfiguration];
+    if ([self.captureSession canAddOutput:self.movieFileOutput]) {
+        [self.captureSession addOutput:self.movieFileOutput];
+    }
+    [self.captureSession commitConfiguration];
+}
+
+- (void)removeMovieFileOutput {
+    if (self.movieFileOutput) [self.captureSession removeOutput:self.movieFileOutput];
+}
+
+/// 配置视频数据输出
+- (void)configVideoDataOutput {
+    // 视频Buffer输出
+    self.videoDataOutput = [[AVCaptureVideoDataOutput alloc] init];
+    [self.videoDataOutput setSampleBufferDelegate:self queue:self.captureQueue];
+    [self.videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
+    //kCVPixelBufferPixelFormatTypeKey它指定像素的输出格式，这个参数直接影响到生成图像的成功与否
+   // kCVPixelFormatType_420YpCbCr8BiPlanarFullRange  YUV420格式.
+    [self.videoDataOutput setVideoSettings:@{(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)}];
+    [self.captureSession beginConfiguration];
+    if ([self.captureSession canAddOutput:self.videoDataOutput]) {
+        [self.captureSession addOutput:self.videoDataOutput];
+    }
+    [self.captureSession commitConfiguration];
+}
+
+- (void)removeVideoDataOutput {
+    if (self.videoDataOutput) [self.captureSession removeOutput:self.videoDataOutput];
+}
+
+#pragma mark - Func 音频输入输出配置
+/// 配置音频输入
+- (BOOL)configAudioInput:(NSError * _Nullable *)error {
+    // 添加音频捕捉设备 ，如果只是拍摄静态图片，可以不用设置
+    // 选择默认音频捕捉设备 即返回一个内置麦克风
+    AVCaptureDevice *audioDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+    self.audioDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:audioDevice error:error];
+    if (self.audioDeviceInput && [self.captureSession canAddInput:self.audioDeviceInput]) {
+        [self.captureSession beginConfiguration];
+        [self.captureSession addInput:self.audioDeviceInput];
+        [self.captureSession commitConfiguration];
+        return YES;
+    }else {
+        return NO;
+    }
+}
+
+- (void)removeAudioDeviceInput {
+    if (self.audioDeviceInput) [self.captureSession removeInput:self.audioDeviceInput];
+}
+
+/// 配置音频数据输出
+- (BOOL)configAudioDataOutput {
+    self.audioDataOutput = [[AVCaptureAudioDataOutput alloc] init];
+    [self.audioDataOutput setSampleBufferDelegate:self queue:self.captureQueue];
+    if([self.captureSession canAddOutput:self.audioDataOutput]){
+        [self.captureSession beginConfiguration];
+        [self.captureSession addOutput:self.audioDataOutput];
+        [self.captureSession commitConfiguration];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+- (void)removeAudioDataOutput {
+    if (self.audioDataOutput) [self.captureSession removeOutput:self.audioDataOutput];
+}
+
+#pragma mark - Func 会话
+// 开始会话
+- (void)startSessionSync {
+    // 检查是否处于运行状态
+    if (![self.captureSession isRunning]) {
+        // 使用同步调用会损耗一定的时间，则用异步的方式处理
+        dispatch_sync(self.captureQueue, ^{
+            [self.captureSession startRunning];
+        });
+    }
+}
+
+// 停止会话
+- (void)stopSessionAsync {
+    // 检查是否处于运行状态
+    if ([self.captureSession isRunning]) {
+        dispatch_async(self.captureQueue, ^{
+            [self.captureSession stopRunning];
+        });
+    }
+}
+
+// 开始会话
+- (void)startSessionAsync {
+    // 检查是否处于运行状态
+    if (![self.captureSession isRunning]) {
+        // 使用同步调用会损耗一定的时间，则用异步的方式处理
+        dispatch_async(self.captureQueue, ^{
+            [self.captureSession startRunning];
+        });
+    }
+}
+
+// 停止会话
+- (void)stopSessionSync {
+    // 检查是否处于运行状态
+    if ([self.captureSession isRunning]) {
+        dispatch_async(self.captureQueue, ^{
+            [self.captureSession stopRunning];
+        });
+    }
+}
+
+#pragma mark - 静态图片捕捉
+#pragma mark Public Func 静态图片捕捉
+// 捕捉静态图片
+- (void)captureStillImage {
+    if (!self.isConfigSessionPreset) [self configSessionPreset:AVCaptureSessionPresetMedium];
+    if (!self.videoDeviceInput) {
+        NSError *configError;
+        BOOL configResult = [self configVideoInput:&configError];
+        if (!configResult) return;
+    }
+    if (!self.stillImageOutput) [self configStillImageOutput];
+    [self startSessionSync];
+    
+    // 获取图片输出连接
+    AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+    // 即使程序只支持纵向，但是如果用户横向拍照时，需要调整结果照片的方向
+    // 判断是否支持设置视频方向， 支持则根据设备方向设置输出方向值
+    if (connection.isVideoOrientationSupported) {
+        connection.videoOrientation = [self getCurrentVideoOrientation];
+    }
+    
+    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^(CMSampleBufferRef  _Nullable imageDataSampleBuffer, NSError * _Nullable error) {
+        if (imageDataSampleBuffer != NULL) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureImageFileSuccess)]) {
+                    [self.delegate mediaCaptureImageFileSuccess];
+                }
+            });
+            // CMSampleBufferRef转UIImage 并写入相册
+            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+            UIImage *image = [[UIImage alloc] initWithData:imageData];
+            
+            [self writeImageToAssetsLibrary:image];
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureImageFailedWithError:)]) {
+                    [self.delegate mediaCaptureImageFailedWithError:error];
+                }
+            });
+            NSLog(@"NULL sampleBuffer:%@",[error localizedDescription]);
+        }
+    }];
+}
+
+#pragma mark Private Func 静态图片捕捉
+/**
+ Assets Library 框架
+ 用来让开发者通过代码方式访问iOS photo
+ 注意：会访问到相册，需要修改plist 权限。否则会导致项目崩溃
+ */
+
+/// 将UIImage写入到用户相册
+- (void)writeImageToAssetsLibrary:(UIImage *)image {
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    // 参数1 图片， 参数2 方向， 参数3 回调
+    [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(NSUInteger)image.imageOrientation completionBlock:^(NSURL *assetURL, NSError *error) {
+        if (!error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteImageSuccessWithImage:)]) {
+                    [self.delegate assetLibraryWriteImageSuccessWithImage:image];
+                }
+            });
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteImageFailedWithError:)]) {
+                    [self.delegate assetLibraryWriteImageFailedWithError:error];
+                }
+            });
+        }
+    }];
+}
+
+#pragma mark - 视频文件捕捉
+#pragma mark Public Func 视频文件捕捉
+// 开始录制电影文件
+- (void)startRecordingMovieFile {
+    if (!self.isConfigSessionPreset) [self configSessionPreset:AVCaptureSessionPresetMedium];
+    if (!self.videoDeviceInput) {
+        NSError *configError;
+        BOOL configResult = [self configVideoInput:&configError];
+        if (!configResult) return;
+    }
+    if (!self.movieFileOutput) [self configMovieFileOutput];
+    [self startSessionSync];
+    
+    if ([self isRecordingMovieFile]) return;
+    AVCaptureConnection *videoConnection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+    // 设置输出方向
+    // 即使程序只支持纵向，但是如果用户横向拍照时，需要调整结果照片的方向
+    // 判断是否支持设置视频方向， 支持则根据设备方向设置输出方向值
+    if (videoConnection.isVideoOrientationSupported) {
+        videoConnection.videoOrientation = [self getCurrentVideoOrientation];
+    }
+    // 设置视频帧稳定
+    // 判断是否支持视频稳定 可以显著提高视频的质量。只会在录制视频文件涉及
+    if (videoConnection.isVideoStabilizationSupported) {
+        videoConnection.enablesVideoStabilizationWhenAvailable = YES;
+    }
+
+    // 设置对焦
+    AVCaptureDevice *device = [self getActiveCamera];
+    // 摄像头可以进行平滑对焦模式操作。即减慢摄像头镜头对焦速度。当用户移动拍摄时摄像头会尝试快速自动对焦。
+    if (device.isSmoothAutoFocusEnabled) {
+        NSError *error;
+        if ([device lockForConfiguration:&error]) {
+            device.smoothAutoFocusEnabled = YES;
+            [device unlockForConfiguration];
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+                    [self.delegate deviceConfigurationFailedWithError:error];
+                }
+            });
+        }
+    }
+    
+    /*
+    // 设置FPS
+    //获取当前支持的最大fps
+    float maxRate = [(AVFrameRateRange *)[device.activeFormat.videoSupportedFrameRateRanges objectAtIndex:0] maxFrameRate];
+    //如果想要设置的fps小于或等于最大fps，就进行修改
+    NSInteger fps = 30;
+    if (maxRate >= fps) {
+        //实际修改fps的代码
+        if ([device lockForConfiguration:NULL]) {
+            device.activeVideoMinFrameDuration = CMTimeMake(10, (int)(fps * 10));
+            device.activeVideoMaxFrameDuration = device.activeVideoMinFrameDuration;
+            [device unlockForConfiguration];
+        }
+    }
+     */
+    
+    self.movieFileOutputURL = [self getVideoTempPathURL];
+    // 开始录制 参数1:录制保存路径  参数2:代理
+    [self.movieFileOutput startRecordingToOutputFileURL:self.movieFileOutputURL recordingDelegate:self];
+}
+
+// 停止录制电影文件
+- (void)stopRecordingMovieFile {
+    if ([self isRecordingMovieFile]) {
+        [self.movieFileOutput stopRecording];
+    }
+}
+
+// 是否在录制电影文件
+- (BOOL)isRecordingMovieFile {
+    return self.movieFileOutput.isRecording;
+}
+
+// 录制电影文件的时间
+- (CMTime)movieFileRecordedDuration {
+    return self.movieFileOutput.recordedDuration;
+}
+
+#pragma mark AVCaptureFileOutputRecordingDelegate
+/// 捕捉电影文件成功的回调
+- (void)captureOutput:(AVCaptureFileOutput *)output didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray<AVCaptureConnection *> *)connections error:(NSError *)error {
+    if (error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureMovieFileFailedWithError:)]) {
+                [self.delegate mediaCaptureMovieFileFailedWithError:error];
+            }
+        });
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureMovieFileSuccess)]) {
+                [self.delegate mediaCaptureMovieFileSuccess];
+            }
+        });
+        // copy一个副本再置为nil
+        // 将文件写入相册
+        [self writeVideoToAssetsLibrary:self.movieFileOutputURL.copy];
+        self.movieFileOutputURL = nil;
+    }
+}
+
+
+#pragma mark Private Func 电影文件捕捉
+/// 创建视频文件临时路径URL
+- (NSURL *)getVideoTempPathURL {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *tempPath = [fileManager temporaryDirectoryWithTemplateString:@"video.XXXXXXXXXX"];
+    if (tempPath) {
+        NSString *filePath = [tempPath stringByAppendingPathComponent:@"temp_video.mov"];
+        return [NSURL URLWithString:filePath];
+    }
+    return nil;
+}
+
+/// 将视频文件写入到用户相册
+- (void)writeVideoToAssetsLibrary:(NSURL *)videoURL {
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    // 和图片不同，视频的写入更耗时，所以写入之前应该判断是否能写入
+    if (![library videoAtPathIsCompatibleWithSavedPhotosAlbum:videoURL]) return;
+    [library writeVideoAtPathToSavedPhotosAlbum:videoURL completionBlock:^(NSURL *assetURL, NSError *error) {
+        if (error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteMovieFileFailedWithError:)]) {
+                    [self.delegate assetLibraryWriteMovieFileFailedWithError:error];
+                }
+            });
+        } else {
+            // 写入成功 回调封面图
+            [self getVideoCoverImageWithVideoURL:videoURL callBlock:^(UIImage *coverImage) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteMovieFileSuccessWithCoverImageassetLibraryWriteMovieFileSuccessWithCoverImage:)]) {
+                        [self.delegate assetLibraryWriteMovieFileSuccessWithCoverImage:coverImage];
+                    }
+                });
+            }];
+        }
+    }];
+}
+
+/// 获取视频文件封面图
+- (void)getVideoCoverImageWithVideoURL:(NSURL *)videoURL callBlock:(void(^)(UIImage *))callBlock {
+    dispatch_async(self.captureQueue, ^{
+        AVAsset *asset = [AVAsset assetWithURL:videoURL];
+        AVAssetImageGenerator *imageGenerator = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
+        // 设置maximumSize 宽为100，高为0 根据视频的宽高比来计算图片的高度
+        imageGenerator.maximumSize = CGSizeMake(100.0f, 0.0f);
+        // 捕捉视频缩略图会考虑视频的变化（如视频的方向变化），如果不设置，缩略图的方向可能出错
+        imageGenerator.appliesPreferredTrackTransform = YES;
+        CGImageRef imageRef = [imageGenerator copyCGImageAtTime:kCMTimeZero actualTime:NULL error:nil];
+        UIImage *image = [UIImage imageWithCGImage:imageRef];
+        CGImageRelease(imageRef);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            !callBlock ?: callBlock(image);
+        });
+    });
+}
+
+#pragma mark - 视频数据捕捉
+/// 捕捉视频数据
+- (void)startCaptureVideoData {
+    if (!self.isConfigSessionPreset) [self configSessionPreset:AVCaptureSessionPresetMedium];
+    if (!self.videoDeviceInput) {
+        NSError *configError;
+        BOOL configResult = [self configVideoInput:&configError];
+        if (!configResult) return;
+    }
+    if (!self.videoDataOutput) [self configVideoDataOutput];
+    if (!self.audioDeviceInput) {
+        NSError *configError;
+        BOOL configResult = [self configAudioInput:&configError];
+        if (!configResult) return;
+    }
+    if (!self.audioDataOutput) [self configAudioDataOutput];
+    [self startSessionSync];
+}
+
+- (void)stopCaptureVideoData {
+    [self stopSessionSync];
+}
+
+/// 捕捉视频数据
+- (void)startCaptureMuteVideoData {
+    if (!self.isConfigSessionPreset) [self configSessionPreset:AVCaptureSessionPresetMedium];
+    if (!self.videoDeviceInput) {
+        NSError *configError;
+        BOOL configResult = [self configVideoInput:&configError];
+        if (!configResult) return;
+    }
+    if (!self.movieFileOutput) [self configMovieFileOutput];
+    [self startSessionSync];
+}
+
+- (void)stopCaptureMuteVideoData {
+    [self stopSessionSync];
+}
+
+#pragma mark - 音频数据捕捉
+/// 捕捉音频数据
+- (void)startCaptureAudioData {
+    if (!self.audioDeviceInput) {
+        NSError *configError;
+        BOOL configResult = [self configAudioInput:&configError];
+        if (!configResult) return;
+    }
+    if (!self.audioDataOutput) [self configAudioDataOutput];
+    [self startSessionSync];
+}
+
+- (void)stopCaptureAudioData {
+    [self stopSessionSync];
+}
+
+#pragma mark AVCaptureVideo/AudioDataOutputSampleBufferDelegate
+-(void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection{
+    // 注意，视频/音频通过AV采集，都会走这里，需要对音频/视频做区分
+    // 直接判断output 是videoDataOutput/Audio
+    if ([captureOutput isKindOfClass:AVCaptureVideoDataOutput.class]) {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(captureVideoSampleBuffer:)]) {
+            [_delegate captureVideoSampleBuffer:sampleBuffer];
+        }
+    }
+    if ([captureOutput isKindOfClass:AVCaptureAudioDataOutput.class]) {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(captureAudioSampleBuffer:)]) {
+            [_delegate captureAudioSampleBuffer:sampleBuffer];
+        }
+    }
+}
 
 #pragma mark - Getter
+/**
+ 获取当前活跃的设备，简单二次封装
+ */
+
 - (NSUInteger)cameraCount {
     return [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] count];
 }
@@ -114,150 +627,6 @@ static const NSString *CameraAdjustingExposureContext;
             }
         });
     }
-}
-
-#pragma mark - Public Func 设置会话
-// 设置会话，设置分辨率，并将输入输出添加到会话中
-- (BOOL)setupSession:(NSError * _Nullable *)error {
-    // 创建捕捉会话 AVCaptureSession 是捕捉场景的中心枢纽
-    self.captureSession = [[AVCaptureSession alloc] init];
-    
-    // 设置图像分辨率
-    [self configSessionPreset];
-    
-    // 设置视频输入
-    BOOL configVideoResult = [self configVideoInOutPut:error];
-    if (!configVideoResult) return configVideoResult;
-    // 设置音频输入
-    BOOL configAudioResult = [self configAudioInPut:error];
-    if (!configAudioResult) return configAudioResult;
-
-    [self configVideoOutPut:error];
-    
-    return YES;
-}
-
-/// 配置捕捉会话的分辨率
-- (void)configSessionPreset {
-    if ([self.captureSession canSetSessionPreset:AVCaptureSessionPreset1920x1080])  {
-        self.captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
-        _witdh = 1080; _height = 1920;
-    }else if ([self.captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720]) {
-        self.captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
-        _witdh = 720; _height = 1280;
-    }else{
-        self.captureSession.sessionPreset = AVCaptureSessionPreset640x480;
-        _witdh = 480; _height = 640;
-    }
-}
-
-/// 设置视频输入
-- (BOOL)configVideoInOutPut:(NSError * _Nullable *)error {
-    // 添加视频捕捉设备
-    // 拿到默认视频捕捉设备 iOS默认后置摄像头
-    AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-    // 将捕捉设备转化为AVCaptureDeviceInput
-    // 注意：会话不能直接使用AVCaptureDevice，必须将AVCaptureDevice封装成AVCaptureDeviceInput对象
-    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:error];
-    // 将捕捉设备添加给会话
-    // 使用前判断videoInput是否有效以及能否添加，因为摄像头是一个公共设备，不属于任何App，有可能别的App在使用，添加前应该先进行判断是否可以添加
-    if (videoInput && [self.captureSession canAddInput:videoInput]) {
-        // 将videoInput 添加到 captureSession中
-        [self.captureSession beginConfiguration];
-        [self.captureSession addInput:videoInput];
-        [self.captureSession commitConfiguration];
-        self.videoDeviceInput = videoInput;
-        return YES;
-    }else {
-        return NO;
-    }
-}
-
-/// 配置视频输出
-- (void)configVideoOutPut:(NSError * _Nullable *)error {
-    // 设置视频类输出 (图片/视频/Buffer) 根据需求可选
-    
-    // AVCaptureStillImageOutput 从摄像头捕捉静态图片
-    self.imageOutput = [[AVCaptureStillImageOutput alloc] init];
-    // 配置字典：希望捕捉到JPEG格式的图片
-    self.imageOutput.outputSettings = @{AVVideoCodecKey:AVVideoCodecJPEG};
-    // 输出连接 判断是否可用，可用则添加到输出连接中去
-    [self.captureSession beginConfiguration];
-    if ([self.captureSession canAddOutput:self.imageOutput]) {
-        [self.captureSession addOutput:self.imageOutput];
-    }
-    [self.captureSession commitConfiguration];
-    
-    // AVCaptureMovieFileOutput，将QuickTime视频录制到文件系统
-    self.movieOutput = [[AVCaptureMovieFileOutput alloc] init];
-    [self.captureSession beginConfiguration];
-    if ([self.captureSession canAddOutput:self.movieOutput]) {
-        [self.captureSession addOutput:self.movieOutput];
-    }
-    [self.captureSession commitConfiguration];
-    
-    // 视频Buffer输出
-    self.videoBufferOutput = [[AVCaptureVideoDataOutput alloc] init];
-    [self.videoBufferOutput setSampleBufferDelegate:self queue:self.captureQueue];
-    [self.videoBufferOutput setAlwaysDiscardsLateVideoFrames:YES];
-    //kCVPixelBufferPixelFormatTypeKey它指定像素的输出格式，这个参数直接影响到生成图像的成功与否
-   // kCVPixelFormatType_420YpCbCr8BiPlanarFullRange  YUV420格式.
-    [self.videoBufferOutput setVideoSettings:@{(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)}];
-    [self.captureSession beginConfiguration];
-    if ([self.captureSession canAddOutput:self.videoBufferOutput]) {
-        [self.captureSession addOutput:self.videoBufferOutput];
-    }
-    [self.captureSession commitConfiguration];
-    self.videoBufferConnection = [self.videoBufferOutput connectionWithMediaType:AVMediaTypeVideo];
-    self.videoBufferConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
-}
-
-/// 设置音频输入
-- (BOOL)configAudioInPut:(NSError * _Nullable *)error {
-    // 添加音频捕捉设备 ，如果只是拍摄静态图片，可以不用设置
-    // 选择默认音频捕捉设备 即返回一个内置麦克风
-    AVCaptureDevice *audioDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
-    AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioDevice error:error];
-    if (audioInput && [self.captureSession canAddInput:audioInput]) {
-        [self.captureSession addInput:audioInput];
-        return YES;
-    }else {
-        return NO;
-    }
-}
-
-/// 配置音频输出
-- (void)configAudioOutPut:(NSError * _Nullable *)error {
-    
-}
-
-// 开始会话
-- (void)startSession {
-    // 检查是否处于运行状态
-    if (![self.captureSession isRunning]) {
-        // 使用同步调用会损耗一定的时间，则用异步的方式处理
-        dispatch_async(self.captureQueue, ^{
-            [self.captureSession startRunning];
-        });
-    }
-}
-
-// 停止会话
-- (void)stopSession {
-    // 检查是否处于运行状态
-    if ([self.captureSession isRunning]) {
-        dispatch_async(self.captureQueue, ^{
-            [self.captureSession stopRunning];
-        });
-    }
-}
-
-/// 销毁会话
-- (void)destroyCaptureSession {
-    if (self.captureSession) {
-        
-    }
-    self.captureSession = nil;
 }
 
 #pragma mark - Public Func 镜头切换
@@ -464,40 +833,7 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
-#pragma mark - Public Func 图片捕捉
-// 捕捉静态图片
-- (void)captureStillImage {
-    // 获取图片输出连接
-    AVCaptureConnection *connection = [self.imageOutput connectionWithMediaType:AVMediaTypeVideo];
-    // 即使程序只支持纵向，但是如果用户横向拍照时，需要调整结果照片的方向
-    // 判断是否支持设置视频方向， 支持则根据设备方向设置输出方向值
-    if (connection.isVideoOrientationSupported) {
-        connection.videoOrientation = [self getCurrentVideoOrientation];
-    }
-    [self.imageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^(CMSampleBufferRef  _Nullable imageDataSampleBuffer, NSError * _Nullable error) {
-        if (imageDataSampleBuffer != NULL) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureImageSuccess)]) {
-                    [self.delegate mediaCaptureImageSuccess];
-                }
-            });
-            // CMSampleBufferRef转UIImage 并写入相册
-            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-            UIImage *image = [[UIImage alloc] initWithData:imageData];
-            
-            [self writeImageToAssetsLibrary:image];
-        } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureFailedWithError:)]) {
-                    [self.delegate mediaCaptureFailedWithError:error];
-                }
-            });
-            NSLog(@"NULL sampleBuffer:%@",[error localizedDescription]);
-        }
-    }];
-}
-
-#pragma mark - Private Func 图片捕捉
+#pragma mark - 获取设备方向
 /// 根据设备方向获取图像方向
 - (AVCaptureVideoOrientation)getCurrentVideoOrientation {
     AVCaptureVideoOrientation orientation ;
@@ -517,167 +853,6 @@ static const NSString *CameraAdjustingExposureContext;
     }
     return orientation;
 }
-
-/**
- Assets Library 框架
- 用来让开发者通过代码方式访问iOS photo
- 注意：会访问到相册，需要修改plist 权限。否则会导致项目崩溃
- */
-
-/// 将UIImage写入到用户相册
-- (void)writeImageToAssetsLibrary:(UIImage *)image {
-    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-    // 参数1 图片， 参数2 方向， 参数3 回调
-    [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(NSUInteger)image.imageOrientation completionBlock:^(NSURL *assetURL, NSError *error) {
-        if (!error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteImageSuccessWithImage:)]) {
-                    [self.delegate assetLibraryWriteImageSuccessWithImage:image];
-                }
-            });
-        } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteFailedWithError:)]) {
-                    [self.delegate assetLibraryWriteFailedWithError:error];
-                }
-            });
-        }
-    }];
-}
-
-#pragma mark - Public Func 视频捕捉
-// 开始录制视频
-- (void)startRecordingVideo {
-    if ([self isRecordingVideo]) return;
-    if (self.movieOutput) {
-        AVCaptureConnection *videoConnection = [self.movieOutput connectionWithMediaType:AVMediaTypeVideo];
-        // 即使程序只支持纵向，但是如果用户横向拍照时，需要调整结果照片的方向
-        // 判断是否支持设置视频方向， 支持则根据设备方向设置输出方向值
-        if (videoConnection.isVideoOrientationSupported) {
-            videoConnection.videoOrientation = [self getCurrentVideoOrientation];
-        }
-        // 判断是否支持视频稳定 可以显著提高视频的质量。只会在录制视频文件涉及
-        if (videoConnection.isVideoStabilizationSupported) {
-            videoConnection.enablesVideoStabilizationWhenAvailable = YES;
-        }
-        AVCaptureDevice *device = [self getActiveCamera];
-        // 摄像头可以进行平滑对焦模式操作。即减慢摄像头镜头对焦速度。当用户移动拍摄时摄像头会尝试快速自动对焦。
-        if (device.isSmoothAutoFocusEnabled) {
-            NSError *error;
-            if ([device lockForConfiguration:&error]) {
-                device.smoothAutoFocusEnabled = YES;
-                [device unlockForConfiguration];
-            } else {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
-                        [self.delegate deviceConfigurationFailedWithError:error];
-                    }
-                });
-            }
-        }
-        self.movieOutputURL = [self getTempPathURL];
-        // 开始录制 参数1:录制保存路径  参数2:代理
-        [self.movieOutput startRecordingToOutputFileURL:self.movieOutputURL recordingDelegate:self];
-    }
-    
-    if (self.videoBufferOutput) {
-        AVCaptureConnection *videoConnection = [self.videoBufferOutput connectionWithMediaType:AVMediaTypeVideo];
-    }
-}
-
-// 停止录制视频
-- (void)stopRecordingVideo {
-    if ([self isRecordingVideo]) {
-        [self.movieOutput stopRecording];
-    }
-}
-
-// 是否在录制视频
-- (BOOL)isRecordingVideo {
-    return self.movieOutput.isRecording;
-}
-
-// 录制视频的时间
-- (CMTime)recordedDuration {
-    return self.movieOutput.recordedDuration;
-}
-
-#pragma mark - Private Func 视频捕捉
-// 临时路径URL
-- (NSURL *)getTempPathURL {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *tempPath = [fileManager temporaryDirectoryWithTemplateString:@"video.XXXXXXXXXX"];
-    if (tempPath) {
-        NSString *filePath = [tempPath stringByAppendingPathComponent:@"temp_video.mov"];
-        return [NSURL URLWithString:filePath];
-    }
-    return nil;
-}
-
-/// 将视频写入到用户相册
-- (void)writeVideoToAssetsLibrary:(NSURL *)videoURL {
-    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-    // 和图片不同，视频的写入更耗时，所以写入之前应该判断是否能写入
-    if (![library videoAtPathIsCompatibleWithSavedPhotosAlbum:videoURL]) return;
-    [library writeVideoAtPathToSavedPhotosAlbum:videoURL completionBlock:^(NSURL *assetURL, NSError *error) {
-        if (error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteFailedWithError:)]) {
-                    [self.delegate assetLibraryWriteFailedWithError:error];
-                }
-            });
-        } else {
-            // 写入成功 回调封面图
-            [self getVideoCoverImageWithVideoURL:videoURL callBlock:^(UIImage *coverImage) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteVideoSuccessWithCoverImage:)]) {
-                        [self.delegate assetLibraryWriteVideoSuccessWithCoverImage:coverImage];
-                    }
-                });
-            }];
-        }
-    }];
-}
-
-/// 获取封面图
-- (void)getVideoCoverImageWithVideoURL:(NSURL *)videoURL callBlock:(void(^)(UIImage *))callBlock {
-    dispatch_async(self.captureQueue, ^{
-        AVAsset *asset = [AVAsset assetWithURL:videoURL];
-        AVAssetImageGenerator *imageGenerator = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
-        // 设置maximumSize 宽为100，高为0 根据视频的宽高比来计算图片的高度
-        imageGenerator.maximumSize = CGSizeMake(100.0f, 0.0f);
-        // 捕捉视频缩略图会考虑视频的变化（如视频的方向变化），如果不设置，缩略图的方向可能出错
-        imageGenerator.appliesPreferredTrackTransform = YES;
-        CGImageRef imageRef = [imageGenerator copyCGImageAtTime:kCMTimeZero actualTime:NULL error:nil];
-        UIImage *image = [UIImage imageWithCGImage:imageRef];
-        CGImageRelease(imageRef);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            !callBlock ?: callBlock(image);
-        });
-    });
-}
-
-#pragma mark - AVCaptureFileOutputRecordingDelegate
-- (void)captureOutput:(AVCaptureFileOutput *)output didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray<AVCaptureConnection *> *)connections error:(NSError *)error {
-    if (!error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureFailedWithError:)]) {
-                [self.delegate mediaCaptureFailedWithError:error];
-            }
-        });
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureVideoSuccess)]) {
-                [self.delegate mediaCaptureVideoSuccess];
-            }
-        });
-        // copy一个副本再置为nil
-        [self writeVideoToAssetsLibrary:self.movieOutputURL.copy];
-        self.movieOutputURL = nil;
-    }
-}
-
-
 
 #pragma mark - Lazy Load
 - (dispatch_queue_t)captureQueue {

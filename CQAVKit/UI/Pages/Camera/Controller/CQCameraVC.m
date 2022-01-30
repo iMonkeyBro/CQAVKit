@@ -58,9 +58,9 @@
 }
 
 - (void)mediaCaptureImageSuccess {
-    [self.captureManager stopSession];
+    [self.captureManager stopSessionAsync];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self.captureManager startSession];
+        [self.captureManager stopSessionAsync];
     });
 }
 
@@ -78,7 +78,7 @@
     });
 }
 
-- (void)assetLibraryWriteVideoSuccessWithCoverImage:(UIImage *)coverImage {
+- (void)assetLibraryWriteMovieFileSuccessWithCoverImage:(UIImage *)coverImage {
     
 }
 
@@ -129,9 +129,11 @@
 #pragma mark - CaptureSession
 - (void)configCaptureSession {
     NSError *error;
-    if ([self.captureManager setupSession:&error]) {
+    [self.captureManager configSessionPreset:AVCaptureSessionPreset3840x2160];
+    if ([self.captureManager configVideoInput:&error]) {
+        [self.captureManager configStillImageOutput];
         self.previewView.session = self.captureManager.captureSession;
-        [self.captureManager startSession];
+        [self.captureManager startSessionAsync];
     } else {
         CQLog(@"Error: %@", [error localizedDescription]);
     }

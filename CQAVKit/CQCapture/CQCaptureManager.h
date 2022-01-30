@@ -26,17 +26,25 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 /**
- 当捕捉到信号时
+ 当捕捉到视频信号时
  @param sampleBuffer 捕捉到的buffer
- @param type 捕捉类型
  */
-- (void)captureSampleBuffer:(CMSampleBufferRef)sampleBuffer type:(CQCaptureType)type;
+- (void)captureVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 
+/**
+ 当捕捉到音频信号时
+ @param sampleBuffer 捕捉到的buffer
+ */
+- (void)captureAudioSampleBuffer:(CMSampleBufferRef)sampleBuffer;
+
+#pragma mark - 配置回调
 /**
  设备配置错误，创建AVCaptureDeviceInput出错 / lockForConfiguration出错
  @param error 错误信息
  */
 - (void)deviceConfigurationFailedWithError:(NSError *)error;
+
+#pragma mark - 相机操作回调
 /**
  切换相机成功
  */
@@ -45,34 +53,48 @@ NS_ASSUME_NONNULL_BEGIN
  切换相机失败
  */
 - (void)switchCameraFailed;
+
+#pragma mark - 静态图片捕捉回调
 /**
- 媒体捕捉错误，捕捉照片或视频时出现错误
+ 媒体捕捉图片文件成功，AVCaptureStillImageOutput成功
+ */
+- (void)mediaCaptureImageFileSuccess;
+/**
+ 媒体捕捉照片时出现错误，AVCaptureStillImageOutput错误
  @param error 错误信息
  */
-- (void)mediaCaptureFailedWithError:(NSError *)error;
+- (void)mediaCaptureImageFailedWithError:(NSError *)error;
 /**
- 媒体捕捉图片成功
- */
-- (void)mediaCaptureImageSuccess;
-/**
- 媒体捕捉视频成功
- */
-- (void)mediaCaptureVideoSuccess;
-/**
- 资源库写入错误，将图片或视频写入相册时出现错误
+ 资源库写入图片错误，将图片写入相册时出现错误
  @param error 错误信息
  */
-- (void)assetLibraryWriteFailedWithError:(NSError *)error;
+- (void)assetLibraryWriteImageFailedWithError:(NSError *)error;
 /**
  资源库写入图片成功
  @param image 被写入的图片
  */
 - (void)assetLibraryWriteImageSuccessWithImage:(UIImage *)image;
+
+#pragma mark - 电影文件捕捉回调
 /**
- 资源库写入视频成功
+ 媒体捕捉电影文件成功，AVCaptureMovieFileOutput成功
+ */
+- (void)mediaCaptureMovieFileSuccess;
+/**
+ 媒体捕捉电影文件时出现错误，AVCaptureMovieFileOutput错误
+ @param error 错误信息
+ */
+- (void)mediaCaptureMovieFileFailedWithError:(NSError *)error;
+/**
+ 资源库写入电影文件错误，将视频写入相册时出现错误
+ @param error 错误信息
+ */
+- (void)assetLibraryWriteMovieFileFailedWithError:(NSError *)error;
+/**
+ 资源库写入电影文件成功
  @param coverImage 视频封面图片
  */
-- (void)assetLibraryWriteVideoSuccessWithCoverImage:(UIImage *)coverImage;
+- (void)assetLibraryWriteMovieFileSuccessWithCoverImage:(UIImage *)coverImage;
 
 @end
 
@@ -100,25 +122,106 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign, readonly) BOOL isSupportTapFocus;  ///< 相机是否支持点击聚焦，例如一些设备的前置是不支持的
 @property (nonatomic, assign, readonly) BOOL isSupportTapExpose; ///< 相机是否支持点击曝光
 
-#pragma mark - Func 设置会话
-/**
- 设置会话
- @param error 接收错误信息
- */
-- (BOOL)setupSession:(NSError * _Nullable *)error;
+#pragma mark - Func 会话
 /**
  开始会话
+ 注意:同步开启会话是耗时操作
  */
-- (void)startSession;
+- (void)startSessionSync;
+/**
+ 停止会话
+ 注意:同步关闭会话是耗时操作
+ */
+- (void)stopSessionSync;
+
+/**
+ 开始会话
+ 注意:捕捉静态图片、捕捉视频文件必须在开启会话之后，否则会崩溃，异步开启会话一定要注意开启之后再捕捉
+ */
+- (void)startSessionAsync;
 /**
  停止会话
  */
-- (void)stopSession;
+- (void)stopSessionAsync;
+
+#pragma mark - Func 参数配置
+/// 配置捕捉会话的分辨率，视频/图像类捕捉前应设置，未设置默认为AVCaptureSessionPresetMedium
+- (void)configSessionPreset:(AVCaptureSessionPreset)sessionPreset;
+
+/// 配置FPS
+- (void)configVideoFps:(NSUInteger)fps;
+
+#pragma mark - Func 视频输入输出配置
+/// 配置视频输入
+- (BOOL)configVideoInput:(NSError * _Nullable *)error;
+
+/// 移除音频输入
+- (void)removeVideoDeviceInput;
+
+/// 配置静态图片输出
+- (void)configStillImageOutput;
+
+/// 配置电影文件输出
+- (void)configMovieFileOutput;
+
+/// 配置视频数据输出
+- (void)configVideoDataOutput;
+
+#pragma mark - Func 音频输入输出配置
+/// 配置音频输入
+- (BOOL)configAudioInput:(NSError * _Nullable *)error;
+
+/// 配置音频数据输出
+- (BOOL)configAudioDataOutput;
+
+#pragma mark - 静态图片捕捉
+/**
+ 捕捉静态图片
+ 应先configSessionPreset/configVideoInput/configStillImageOutput,未配置将默认配置，startSession
+ */
+- (void)captureStillImage;
+
+#pragma mark - 电影文件文件捕捉
+/**
+ 开始录制电影文件
+ 应先configSessionPreset/configVideoInput/configMovieFileOutput,未配置将默认配置，startSession
+ */
+- (void)startRecordingMovieFile;
+/**
+ 停止录制电影文件
+ */
+- (void)stopRecordingMovieFile;
+/**
+ 是否在录制电影文件
+ @return 是否在录制视频
+ */
+- (BOOL)isRecordingMovieFile;
+/**
+ 录制电影文件的时间
+ @return 录制视频的时间
+ */
+- (CMTime)movieFileRecordedDuration;
+
+#pragma mark - 视频数据捕捉
+/// 开始捕捉视频数据(包括音频视频),configSessionPreset/configVideoInput/configStillImageOutput,未配置将默认配置
+- (void)startCaptureVideoData;
+/// 停止捕捉视频数据
+- (void)stopCaptureVideoData;
+/// 开始捕捉视频数据(不包括音频),configSessionPreset/configVideoInput/configStillImageOutput,未配置将默认配置
+- (void)startCaptureMuteVideoData;
+/// 停止捕捉视频数据
+- (void)stopCaptureMuteVideoData;
+
+#pragma mark - 音频数据捕捉
+/// 开始捕捉音频数据
+- (void)startCaptureAudioData;
+/// 停止捕捉音频数据
+- (void)stopCaptureAudioData;
 
 #pragma mark - Func 镜头切换
 /**
  切换摄像头
- @return 切换是否成功
+ @return 切换是否成功，return NO一定失败，return YES还需要看代理回调
  */
 - (BOOL)switchCamera;
 /**
@@ -142,31 +245,6 @@ NS_ASSUME_NONNULL_BEGIN
  重置对焦和曝光,将对焦点和曝光点设为中心，并将对焦和曝光模式设为自动
  */
 - (void)resetFocusAndExposureModes;
-
-#pragma mark - Func 图片&视频捕捉
-/**
- 捕捉静态图片
- */
-- (void)captureStillImage;
-
-/**
- 开始录制视频
- */
-- (void)startRecordingVideo;
-/**
- 停止录制视频
- */
-- (void)stopRecordingVideo;
-/**
- 是否在录制视频
- @return 是否在录制视频
- */
-- (BOOL)isRecordingVideo;
-/**
- 录制视频的时间
- @return 录制视频的时间
- */
-- (CMTime)recordedDuration;
 
 @end
 
