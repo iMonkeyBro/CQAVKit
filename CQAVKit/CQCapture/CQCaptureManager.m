@@ -31,11 +31,10 @@ static const NSString *CameraAdjustingExposureContext;
 @property (nonatomic, strong) AVCaptureStillImageOutput *stillImageOutput;  ///< 图片输出
 @property (nonatomic, strong) AVCaptureMovieFileOutput *movieFileOutput;  ///< 电影输出
 @property (nonatomic, strong) NSURL *movieFileOutputURL;  ///< 输出URL
-@property (nonatomic, strong) AVCaptureVideoDataOutput *videoDataOutput;
+@property (nonatomic, strong) AVCaptureVideoDataOutput *videoDataOutput;  ///< 视频数据输出
 /*********音频相关**********/
 @property (nonatomic, strong) AVCaptureDeviceInput *audioDeviceInput;  ///< 音频输入设备
-//输出数据接收
-@property (nonatomic, strong) AVCaptureAudioDataOutput *audioDataOutput;
+@property (nonatomic, strong) AVCaptureAudioDataOutput *audioDataOutput;  ///< 音频数据输出
 
 
 @end
@@ -82,6 +81,10 @@ static const NSString *CameraAdjustingExposureContext;
     self.isConfigSessionPreset = YES;
 }
 
+- (AVCaptureSessionPreset)videoSessionPreset {
+    return self.captureSession.sessionPreset;
+}
+
 /// 配置FPS
 - (void)configVideoFps:(NSUInteger)fps {
     AVCaptureDevice *device = [self getActiveCamera];
@@ -121,6 +124,7 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
+/// 移除视频输入设备
 - (void)removeVideoDeviceInput {
     if (self.videoDeviceInput) [self.captureSession removeInput:self.videoDeviceInput];
 }
@@ -139,6 +143,7 @@ static const NSString *CameraAdjustingExposureContext;
     [self.captureSession commitConfiguration];
 }
 
+/// 移除静态图片输出
 - (void)removeStillImageOutput {
     if (self.stillImageOutput) [self.captureSession removeOutput:self.stillImageOutput];
 }
@@ -154,6 +159,7 @@ static const NSString *CameraAdjustingExposureContext;
     [self.captureSession commitConfiguration];
 }
 
+/// 移除电影文件输出
 - (void)removeMovieFileOutput {
     if (self.movieFileOutput) [self.captureSession removeOutput:self.movieFileOutput];
 }
@@ -174,6 +180,7 @@ static const NSString *CameraAdjustingExposureContext;
     [self.captureSession commitConfiguration];
 }
 
+/// 移除视频数据输出
 - (void)removeVideoDataOutput {
     if (self.videoDataOutput) [self.captureSession removeOutput:self.videoDataOutput];
 }
@@ -195,6 +202,7 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
+/// 移除音频输入设备
 - (void)removeAudioDeviceInput {
     if (self.audioDeviceInput) [self.captureSession removeInput:self.audioDeviceInput];
 }
@@ -213,6 +221,7 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
+/// 移除音频数据输出
 - (void)removeAudioDataOutput {
     if (self.audioDataOutput) [self.captureSession removeOutput:self.audioDataOutput];
 }

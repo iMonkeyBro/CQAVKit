@@ -29,9 +29,7 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
     UIViewController *vc = [NSClassFromString(self.dataList[indexPath.row][@"vc"]) new];
     vc.title = self.dataList[indexPath.row][@"title"];
     [self.navigationController pushViewController:vc animated:YES];
-    
 }
-
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
@@ -42,7 +40,6 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.dataList.count;
 }
-
 
 #pragma mark - Lazy Load
 - (NSArray *)dataList {
