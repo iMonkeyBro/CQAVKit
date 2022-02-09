@@ -48,7 +48,7 @@
     CGPoint point = [sender locationInView:self];
     [self runBoxViewAnimation:self.focusBoxView atPoint:point];
     if (self.delegate && [self.delegate respondsToSelector:@selector(didTapFocusAtPoint:)]) {
-        [self.delegate didTapFocusAtPoint:point];
+        [self.delegate didTapFocusAtPoint:[self captureDevicePointForPoint:point]];
     }
 }
 
@@ -56,7 +56,7 @@
     CGPoint point = [sender locationInView:self];
     [self runBoxViewAnimation:self.exposureBoxView atPoint:point];
     if (self.delegate && [self.delegate respondsToSelector:@selector(didTapExposeAtPoint:)]) {
-        [self.delegate didTapExposeAtPoint:point];
+        [self.delegate didTapExposeAtPoint:[self captureDevicePointForPoint:point]];
     }
 }
 
@@ -91,7 +91,9 @@
 /// 运行重置动画
 - (void)runResetAnimation {
     if (!self.isFocusEnabled && !self.isExposeEnabled) return;
-    // 坐标系转换
+    // 坐标系转换，获取屏幕中心点坐标
+    // 设备坐标转为屏幕坐标，
+    // 捕捉设备空间左上角（0，0），右下角（1，1） 中心点则（0.5，0.5）
     CGPoint centerPoint = [(AVCaptureVideoPreviewLayer *)self.layer pointForCaptureDevicePointOfInterest:CGPointMake(0.5f, 0.5f)];
     self.focusBoxView.center = centerPoint;
     self.exposureBoxView.center = centerPoint;

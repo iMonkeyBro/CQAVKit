@@ -39,6 +39,7 @@
 
 #pragma mark - CQCaptureManagerDelegate
 - (void)switchCameraSuccess {
+    // 切换摄像头成功，重新赋值
     self.previewView.isFocusEnabled = self.captureManager.isSupportTapFocus;
     self.previewView.isExposeEnabled = self.captureManager.isSupportTapExpose;
     self.captureManager.flashMode = AVCaptureFlashModeAuto;
@@ -129,7 +130,7 @@
 #pragma mark - CaptureSession
 - (void)configCaptureSession {
     NSError *error;
-    [self.captureManager configSessionPreset:AVCaptureSessionPreset3840x2160];
+    [self.captureManager configSessionPreset:AVCaptureSessionPreset1920x1080];
     if ([self.captureManager configVideoInput:&error]) {
         [self.captureManager configStillImageOutput];
         self.previewView.session = self.captureManager.captureSession;
