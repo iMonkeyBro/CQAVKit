@@ -101,6 +101,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - CQCaptureManager
 @interface CQCaptureManager : NSObject
 
+- (instancetype)init;
++ (instancetype)new;
+- (instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
+
+
 @property (nonatomic, weak) id<CQCaptureManagerDelegate> delegate;
 
 @property (nonatomic, strong, readonly) AVCaptureSession *captureSession; ///< 捕捉会话

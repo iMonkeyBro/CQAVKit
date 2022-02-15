@@ -7,10 +7,6 @@
 
 #import "CQCoderConfig.h"
 
-@implementation CQCoderConfig
-
-@end
-
 @implementation CQVideoCoderConfig
 + (instancetype)defaultConifg {
     return [[CQVideoCoderConfig alloc] init];

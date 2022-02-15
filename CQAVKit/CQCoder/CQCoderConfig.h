@@ -9,10 +9,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CQCoderConfig : NSObject
-
-@end
-
 @interface CQVideoCoderConfig : NSObject
 
 @property (nonatomic, assign) NSInteger width; ///< 可选，系统支持的分辨率，采集分辨率的宽
