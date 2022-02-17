@@ -63,17 +63,16 @@
      */
     OSStatus status = VTCompressionSessionCreate(kCFAllocatorDefault, (int32_t)_config.width, (int32_t)_config.height, kCMVideoCodecType_H264, NULL, NULL, NULL, videoEncoderCallBack, (__bridge  void *_Nullable)self, &_encodeSession);
     if (status != noErr) {
-        NSLog(@"CQVideoEncoder-VTCompressionSessionCreate create failed. statuc = %d", (int)status);
+        NSLog(@"CQVideoEncoder-VTCompressionSessionCreate create failed. status = %d", (int)status);
         return;
     }
     // 设置编码器属性
     // 设置实时执行
     status = VTSessionSetProperty(_encodeSession, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
-    if (status != noErr) {
-        NSLog(@"CQVideoEncoder-VTSessionSetProperty set RealTime failed. statuc = %d", (int)status);
-        return;
-    }
+    NSLog(@"CQVideoEncoder-VTSessionSetProperty set RealTime. return status = %d", (int)status);
     // 指定编码比特流的配置文件和级别。直播一般使用baseline，可减少由B帧带来的延时
+    status = VTSessionSetProperty(_encodeSession, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_AutoLevel);
+    NSLog(@"CQVideoEncoder-VTSessionSetProperty set ProfileLevel. return status = %d", (int)status);
     
 }
 

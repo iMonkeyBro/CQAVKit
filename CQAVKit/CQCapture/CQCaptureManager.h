@@ -102,7 +102,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CQCaptureManager : NSObject
 
 - (instancetype)init;
-+ (instancetype)new;
 - (instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 
 
