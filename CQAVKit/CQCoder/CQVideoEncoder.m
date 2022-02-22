@@ -16,6 +16,20 @@
 
 @end
 
+/**
+ 思路
+ 1 初始化编码会话
+ 2 公开函数接收包含`CVPixelBuffer`的`CMSampleBufferRef`
+ 3 输入到编码器
+ 4 在编码回调函数里将spspps以及数据回调，外界拿到回调可写入成视频文件
+ 5 销毁编码会话
+ 
+ 用到的三个核心函数
+ 创建解码会话  VTCompressionSessionCreate
+ 编码 将CVImageBufferRef转成存储了CMBlockBuffer的CMSampleBuffer     VTCompressionSessionEncodeFrame
+ 销毁解码会话  VTCompressionSessionInvalidate，销毁前需要先VTCompressionSessionCompleteFrames
+ */
+
 @implementation CQVideoEncoder
 {
     long _frameID;  ///< 帧的递增标识
