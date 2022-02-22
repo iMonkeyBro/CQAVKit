@@ -5,17 +5,6 @@
 //  Created by 刘超群 on 2022/2/5.
 //
 
-#import "CQVideoEncoder.h"
-#import <VideoToolbox/VideoToolbox.h>
-
-@interface CQVideoEncoder ()
-@property (nonatomic, strong) dispatch_queue_t encodeQueue;  ///< 编码队列
-@property (nonatomic, strong) dispatch_queue_t callBackQueue;  ///< 回调队列
-@property (nonatomic, assign) VTCompressionSessionRef encodeSession;  ///< 编码会话
-
-
-@end
-
 /**
  思路
  1 初始化编码会话
@@ -30,6 +19,16 @@
  销毁解码会话  VTCompressionSessionInvalidate，销毁前需要先VTCompressionSessionCompleteFrames
  */
 
+#import "CQVideoEncoder.h"
+#import <VideoToolbox/VideoToolbox.h>
+
+@interface CQVideoEncoder ()
+@property (nonatomic, strong) dispatch_queue_t encodeQueue;  ///< 编码队列
+@property (nonatomic, strong) dispatch_queue_t callBackQueue;  ///< 回调队列
+@property (nonatomic, assign) VTCompressionSessionRef encodeSession;  ///< 编码会话
+
+@end
+
 @implementation CQVideoEncoder
 {
     long _frameID;  ///< 帧的递增标识
@@ -40,7 +39,7 @@
 - (instancetype)initWithConfig:(CQVideoCoderConfig *)config {
     if (self = [super init]) {
         _config = config;
-        [self initVideoToolBox];
+        [self initEncoderSession];
     }
     return self;
 }
@@ -75,8 +74,9 @@
     });
 }
 
-#pragma mark - VideoToolBox
-- (void)initVideoToolBox {
+#pragma mark - 初始化编码会话 设置属性
+/// 初始化编码会话 设置属性
+- (void)initEncoderSession {
     _frameID = 0;
     // 1 创建session（VideoToolBox中的session）
     /**

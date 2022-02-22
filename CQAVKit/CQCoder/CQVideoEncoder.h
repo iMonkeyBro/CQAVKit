@@ -14,7 +14,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol CQVideoEncoderDelegate <NSObject>
-
+@required
 /**
  当编码完成时
  @param h264Data 编码完成的H264数据
