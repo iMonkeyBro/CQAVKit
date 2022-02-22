@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)videoEncoder:(CQVideoEncoder *)videoEncoder didEncodeSuccessWithH264Data:(NSData *)h264Data;
 
 /**
- 编码工具编码时
+ 当编码工具开始编码时 (该回调只会回调一次)
  @param sps sps数据
  @param pps pps数据
  */
