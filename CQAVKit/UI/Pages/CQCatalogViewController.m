@@ -47,7 +47,7 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
         _dataList = @[@{@"title":@"相机捕捉", @"vc":@"CQCameraVC"},
                       @{@"title":@"相机高级捕捉", @"vc":@"CQTestCaptureViewController"},
                       @{@"title":@"VideoToolBox 学习", @"vc":@"CQVTLearningVC"},
-                      @{@"title":@"视频解码", @"vc":@"CQTestCaptureViewController"},
+                      @{@"title":@"测试视频编解码", @"vc":@"CQTestVideoCoderVC"},
                       @{@"title":@"视频渲染", @"vc":@"CQTestCaptureViewController"},
                       @{@"title":@"音频编码", @"vc":@"CQTestCaptureViewController"},
                       @{@"title":@"音频解码", @"vc":@"CQTestCaptureViewController"},];
