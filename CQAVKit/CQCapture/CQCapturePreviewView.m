@@ -10,11 +10,16 @@
 #define BOX_BOUNDS CGRectMake(0.0f, 0.0f, 150, 150.0f)
 
 @interface CQCapturePreviewView ()
-@property (strong, nonatomic) UIView *focusBoxView;  ///< 对焦框
-@property (strong, nonatomic) UIView *exposureBoxView;  ///< 曝光框
-@property (strong, nonatomic) UITapGestureRecognizer *singleTapRecognizer;  ///< 单击手势
-@property (strong, nonatomic) UITapGestureRecognizer *doubleTapRecognizer;  ///< 双击手势
-@property (strong, nonatomic) UITapGestureRecognizer *doubleDoubleTapRecognizer;  ///< 双指双击手势
+@property (nonatomic, strong) UIView *focusBoxView;  ///< 对焦框
+@property (nonatomic, strong) UIView *exposureBoxView;  ///< 曝光框
+@property (nonatomic, strong) UITapGestureRecognizer *singleTapRecognizer;  ///< 单击手势
+@property (nonatomic, strong) UITapGestureRecognizer *doubleTapRecognizer;  ///< 双击手势
+@property (nonatomic, strong) UITapGestureRecognizer *doubleDoubleTapRecognizer;  ///< 双指双击手势
+
+/******人脸识别框*****/
+@property(nonatomic, strong) CALayer *overlayLayer;  ///< 承载人脸识别layer
+@property(nonatomic, strong) NSMutableDictionary<NSNumber *, CALayer *> *faceLayers;  ///< 人脸识别layer集合，key是faceID
+
 @end
 
 @implementation CQCapturePreviewView
@@ -122,6 +127,7 @@
     [self.singleTapRecognizer requireGestureRecognizerToFail:self.doubleTapRecognizer];
     [self addSubview:self.focusBoxView];
     [self addSubview:self.exposureBoxView];
+    [self.layer addSublayer:self.overlayLayer];
 }
 
 #pragma mark - override
@@ -150,6 +156,49 @@
 - (void)setIsExposeEnabled:(BOOL)isExposeEnabled {
     _isExposeEnabled = isExposeEnabled;
     self.doubleTapRecognizer.enabled = isExposeEnabled;
+}
+
+- (void)setFaceMetadataObjects:(NSArray<AVMetadataFaceObject *> *)faceMetadataObjects {
+    _faceMetadataObjects = faceMetadataObjects;
+    NSArray *transformedFaces = [self transformedMetadataObjects:faceMetadataObjects];
+    NSMutableArray *needRemoveFaces = [self.faceLayers.allKeys mutableCopy];  // 需要删除的
+    for (AVMetadataFaceObject *faceObj in transformedFaces) {
+        NSNumber *faceID = @(faceObj.faceID);
+        // 存在的不需要删除，从删除数组中移除
+        [needRemoveFaces removeObject:faceID];
+        // 拿到当前faceID对应的layer
+        CALayer *faceLayer = self.faceLayers[faceID];
+        // 如果给定的faceID 没有找到对应的图层，创建一个新的，找的则直接使用
+        if (!faceLayer) {
+            faceLayer = [CALayer layer];
+            faceLayer.borderWidth = 5.0f;
+            faceLayer.borderColor = [UIColor redColor].CGColor;
+//            faceLayer.contents = (id)[UIImage imageNamed:@"faceLayer.jpeg"].CGImage;
+            [self.overlayLayer addSublayer:faceLayer];
+            self.faceLayers[faceID] = faceLayer;
+        }
+        // 设置图层的transform属性 CATransform3DIdentity 图层默认变化 这样可以重新设置之前应用的变化
+        faceLayer.transform = CATransform3DIdentity;
+        // 图层的大小 = 人脸的大小
+        faceLayer.frame = faceObj.bounds;
+        // 判断人脸对象是否具有有效的斜倾交。
+        if (faceObj.hasRollAngle) {
+            // 获取相应的CATransform3D值,将它与标识变化关联在一起，并设置transform属性
+            CATransform3D t = [self transformForRollAngle:faceObj.rollAngle];
+            faceLayer.transform = CATransform3DConcat(faceLayer.transform, t);
+        }
+        // 判断人脸对象是否具有有效的偏转角
+        if (faceObj.hasYawAngle) {
+            // 获取相应的CATransform3D值
+            CATransform3D  t = [self transformForYawAngle:faceObj.yawAngle];
+            faceLayer.transform = CATransform3DConcat(faceLayer.transform, t);
+        }
+    }
+    for (NSNumber *faceID in needRemoveFaces) {
+        CALayer *layer = self.faceLayers[faceID];
+        [layer removeFromSuperlayer];
+        [self.faceLayers removeObjectForKey:faceID];
+    }
 }
 
 #pragma mark - Getters
@@ -203,6 +252,99 @@
         _exposureBoxView.hidden = YES;
     }
     return _exposureBoxView;
+}
+
+- (NSMutableDictionary<NSNumber *,CALayer *> *)faceLayers {
+    if (!_faceLayers) {
+        _faceLayers = [NSMutableDictionary dictionary];
+    }
+    return _faceLayers;
+}
+
+- (CALayer *)overlayLayer {
+    if (!_overlayLayer) {
+        _overlayLayer = [CALayer layer];
+        _overlayLayer.frame = self.bounds;
+        // 设置投影方式
+        _overlayLayer.sublayerTransform = [self transform3DMakePerspective:1000];
+    }
+    return _overlayLayer;
+}
+
+#pragma mark - 人脸识别layer相关函数
+/**
+ 透视效果
+ @param eyePosition 观察者到投射面的距离
+ */
+- (CATransform3D)transform3DMakePerspective:(CGFloat)eyePosition {
+    // CATransform3D 图层的旋转，缩放，偏移，歪斜和应用的透
+    // CATransform3DIdentity是单位矩阵，该矩阵没有缩放，旋转，歪斜，透视。该矩阵应用到图层上，就是设置默认值。
+    CATransform3D  transform = CATransform3DIdentity;
+    // 透视效果（就是近大远小），是通过设置m34 m34 = -1.0/D 默认是0.D越小透视效果越明显
+    // eyePosition 观察者到投射面的距离
+    transform.m34 = -1.0/eyePosition;
+    return transform;
+}
+
+/// 摄像头元数据转换
+- (NSArray<AVMetadataObject *> *)transformedMetadataObjects:(NSArray<AVMetadataObject *> *)medMetadataObjects {
+    NSMutableArray *transformedMetadatas = [NSMutableArray array];
+    for (AVMetadataObject *metadataObject in medMetadataObjects) {
+        // 将摄像头的元数据 转换为 视图上的可展示的元数据
+        // 简单说：UIKit的坐标 与 摄像头坐标系统（0，0）-（1，1）不一样。所以需要转换
+        // 转换需要考虑图层、镜像、视频重力、方向等因素 在iOS6.0之前需要开发者自己计算，但iOS6.0后提供方法
+        AVMetadataObject *transformedMetadata = [(AVCaptureVideoPreviewLayer *)self.layer transformedMetadataObjectForMetadataObject:metadataObject];
+        [transformedMetadatas addObject:transformedMetadata];
+    }
+    return transformedMetadatas;
+}
+
+/// 将RollAngle 的 rollAngleInDegrees 值转换为 CATransform3D
+- (CATransform3D)transformForRollAngle:(CGFloat)rollAngleInDegrees {
+    // 将人脸对象得到的RollAngle 单位“度” 转为Core Animation需要的弧度值
+    CGFloat rollAngleInRadians = [self degreesToRadians:rollAngleInDegrees];
+    // 将结果赋给CATransform3DMakeRotation x,y,z轴为0，0，1 得到绕Z轴倾斜角旋转转换
+    return CATransform3DMakeRotation(rollAngleInRadians, 0.0f, 0.0f, 1.0f);
+}
+
+/// 将YawAngle 的 yawAngleInDegrees 值转换为 CATransform3D
+- (CATransform3D)transformForYawAngle:(CGFloat)yawAngleInDegrees {
+    // 将角度转换为弧度值
+     CGFloat yawAngleInRaians = [self degreesToRadians:yawAngleInDegrees];
+    // 将结果CATransform3DMakeRotation x,y,z轴为0，-1，0 得到绕Y轴选择。
+    // 由于overlayer 需要应用sublayerTransform，所以图层会投射到z轴上，人脸从一侧转向另一侧会有3D 效果
+    CATransform3D yawTransform = CATransform3DMakeRotation(yawAngleInRaians, 0.0f, -1.0f, 0.0f);
+    // 因为应用程序的界面固定为垂直方向，但需要为设备方向计算一个相应的旋转变换
+    // 如果不这样，会造成人脸图层的偏转效果不正确
+    return CATransform3DConcat(yawTransform, [self orientationTransform]);
+}
+
+- (CGFloat)degreesToRadians:(CGFloat)degrees {
+    return degrees * M_PI / 180;
+}
+
+- (CATransform3D)orientationTransform {
+    CGFloat angle = 0.0;
+    // 拿到设备方向
+    switch ([UIDevice currentDevice].orientation) {
+            // 下
+        case UIDeviceOrientationPortraitUpsideDown:
+            angle = M_PI;
+            break;
+            // 右
+        case UIDeviceOrientationLandscapeRight:
+            angle = -M_PI / 2.0f;
+            break;
+            // 左
+        case UIDeviceOrientationLandscapeLeft:
+            angle = M_PI /2.0f;
+            break;
+            // 其他
+        default:
+            angle = 0.0f;
+            break;
+    }
+    return CATransform3DMakeRotation(angle, 0.0f, 0.0f, 1.0f);
 }
 
 @end

@@ -12,6 +12,9 @@
 @property (nonatomic, strong) CQCameraShutterButton *shutterBtn;  ///< 快门按钮
 @property (nonatomic, strong) UIButton *modeButton;  ///< 模式按键
 @property (nonatomic, assign) CQCameraMode cameraMode;  ///< 相机模式
+@property (nonatomic, strong) UIButton *faceButton;  ///< 人脸识别开关按键
+@property (nonatomic, assign) BOOL isStartFace;  ///< 相机模式
+
 @end
 
 @implementation CQCameraOperateView
@@ -21,6 +24,7 @@
     if (self) {
         [self configUI];
         self.cameraMode = CQCameraModePhoto;
+        self.isStartFace = NO;
     }
     return self;
 }
@@ -30,6 +34,7 @@
     !self.shutterBtnCallbackBlock ?: self.shutterBtnCallbackBlock();
     if (self.cameraMode == CQCameraModeVideo) {
         self.shutterBtn.selected = !self.shutterBtn.selected;
+        self.modeButton.hidden = !self.modeButton.hidden;
     }
 }
 
@@ -45,6 +50,11 @@
     }
 }
 
+- (void)faceBtnAction {
+    self.isStartFace = !self.isStartFace;
+}
+
+#pragma mark - Setter
 - (void)setCameraMode:(CQCameraMode)cameraMode {
     _cameraMode = cameraMode;
     if (cameraMode == CQCameraModePhoto) {
@@ -57,6 +67,18 @@
     !self.changeModeCallbackBlock ?: self.changeModeCallbackBlock(self.cameraMode);
 }
 
+- (void)setIsStartFace:(BOOL)isStartFace {
+    if (_isStartFace != isStartFace) {
+        _isStartFace = isStartFace;
+        if (isStartFace == YES) {
+            [self.faceButton setTitle:@"人脸识别已开启" forState:UIControlStateNormal];
+        } else {
+            [self.faceButton setTitle:@"人脸识别已关闭" forState:UIControlStateNormal];
+        }
+        !self.changeFaceCallbackBlock ?: self.changeFaceCallbackBlock(isStartFace);
+    }
+}
+
 #pragma mark - UI
 - (void)configUI {
     // 调整self.layer.backgroundColor的透明度会使子视图透明度都改变
@@ -64,6 +86,7 @@
     [self addSubview:self.shutterBtn];
     [self addSubview:self.coverBtn];
     [self addSubview:self.modeButton];
+    [self addSubview:self.faceButton];
     [self.shutterBtn makeConstraints:^(MASConstraintMaker *make) {
         make.centerY.centerX.equalTo(self);
         make.size.equalTo(CGSizeMake(68, 68));
@@ -75,8 +98,11 @@
     }];
     [self.modeButton makeConstraints:^(MASConstraintMaker *make) {
         make.right.equalTo(-10);
+        make.top.equalTo(5);
+    }];
+    [self.faceButton makeConstraints:^(MASConstraintMaker *make) {
+        make.right.equalTo(-10);
         make.centerY.equalTo(self);
-        make.size.equalTo(CGSizeMake(68, 68));
     }];
 }
 
@@ -106,6 +132,16 @@
         [_modeButton addTarget:self action:@selector(modeBtnAction) forControlEvents:UIControlEventTouchUpInside];
     }
     return _modeButton;
+}
+
+- (UIButton *)faceButton {
+    if (!_faceButton) {
+        _faceButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_faceButton setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
+        [_faceButton setTitle:@"人脸识别已关闭" forState:UIControlStateNormal];
+        [_faceButton addTarget:self action:@selector(faceBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _faceButton;
 }
 
 @end

@@ -20,7 +20,13 @@ dispatch_async(dispatch_get_main_queue(), block);\
 
 static const NSString *CameraAdjustingExposureContext;
 
-@interface CQCaptureManager ()<AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate>
+/**
+ AVCaptureFileOutputRecordingDelegate 视频文件录制
+ AVCaptureVideoDataOutputSampleBufferDelegate/AVCaptureAudioDataOutputSampleBufferDelegate  拿NALU数据 Buffer
+ AVCaptureMetadataOutputObjectsDelegate 拿元数据，人脸识别
+ */
+
+@interface CQCaptureManager ()<AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureMetadataOutputObjectsDelegate>
 /*********公共**********/
 @property (nonatomic, strong) dispatch_queue_t captureQueue; ///< 捕捉队列
 @property (nonatomic, strong) AVCaptureSession *captureSession; ///< 捕捉会话
@@ -35,7 +41,8 @@ static const NSString *CameraAdjustingExposureContext;
 /*********音频相关**********/
 @property (nonatomic, strong) AVCaptureDeviceInput *audioDeviceInput;  ///< 音频输入设备
 @property (nonatomic, strong) AVCaptureAudioDataOutput *audioDataOutput;  ///< 音频数据输出
-
+/*********Metadata相关**********/
+@property (nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;  ///< 音频数据输出
 
 @end
 
@@ -227,13 +234,32 @@ static const NSString *CameraAdjustingExposureContext;
 }
 
 #pragma mark - Func 元数据输入输出配置
-- (BOOL)configMetadataOutput {
-    return YES;
+- (BOOL)configMetadataOutputWithType:(NSArray<AVMetadataObjectType> *)metadatObjectTypes {
+    self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+    // 人脸检测使用了硬件加速器，所以任务需要在主线程执行
+    if ([self.captureSession canAddOutput:self.metadataOutput]) {
+        [self.captureSession beginConfiguration];
+        [self.captureSession addOutput:self.metadataOutput];
+        // 限制检查到元数据类型集合的做法是一种优化处理方法。可以减少我们实际感兴趣的对象数量
+        self.metadataOutput.metadataObjectTypes = metadatObjectTypes;
+        [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+        [self.captureSession commitConfiguration];
+        return YES;
+    } else {
+        return NO;
+    }
 }
 
-
 - (void)removeMetadataOutput {
-    
+    if (self.metadataOutput) [self.captureSession removeOutput:self.metadataOutput];
+}
+
+#pragma mark - AVCaptureMetadataOutputObjectsDelegate
+// 捕获到元数据回调
+- (void)captureOutput:(AVCaptureOutput *)output didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(mediaCaptureMetadataSuccessWithMetadataObjects:)]) {
+        [self.delegate mediaCaptureMetadataSuccessWithMetadataObjects:metadataObjects];
+    }
 }
 
 #pragma mark - Func 会话

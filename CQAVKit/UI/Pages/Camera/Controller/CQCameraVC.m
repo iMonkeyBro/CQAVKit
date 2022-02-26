@@ -19,6 +19,9 @@
 @property (nonatomic, strong) CQCameraOperateView *operateView;  ///< 下方操作视图
 @property (nonatomic, assign) CQCameraMode cameraMode;  ///< 拍摄模式
 @property (nonatomic, strong) dispatch_source_t timer;
+@property (nonatomic, assign) BOOL isStartFace;  ///< 相机模式
+
+
 @end
 
 @implementation CQCameraVC
@@ -98,6 +101,20 @@
     });
 }
 
+#pragma mark metedata回调
+- (void)mediaCaptureMetadataSuccessWithMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects {
+    NSMutableArray<AVMetadataFaceObject *> *faceMetadataObjects = NSMutableArray.array;
+    for (AVMetadataObject *metadataObject in metadataObjects) {
+        if ([metadataObject isKindOfClass:AVMetadataFaceObject.class]) {
+            AVMetadataFaceObject *face = (AVMetadataFaceObject *)metadataObject;
+//            NSLog(@"Face detected with ID:%li",(long)face.faceID);
+//            NSLog(@"Face bounds:%@",NSStringFromCGRect(face.bounds));
+            [faceMetadataObjects addObject:face];
+        }
+    }
+    self.previewView.faceMetadataObjects = faceMetadataObjects;
+}
+
 #pragma mark - CQCapturePreviewViewDelegate
 - (void)didTapFocusAtPoint:(CGPoint)point {
     [self.captureManager focusAtPoint:point];
@@ -157,6 +174,16 @@
         self.statusView.timeLabel.hidden = self.cameraMode == CQCameraModePhoto;
         if (self.cameraMode == CQCameraModeVideo) {
             [self.captureManager configVideoFps:60];
+        }
+    };
+    self.operateView.changeFaceCallbackBlock = ^(BOOL isStartFace) {
+        @strongify(self);
+        self.isStartFace = isStartFace;
+        if (isStartFace) {
+            [self.captureManager configMetadataOutputWithType:@[AVMetadataObjectTypeFace]];
+        } else {
+            [self.captureManager removeMetadataOutput];
+            self.previewView.faceMetadataObjects = @[];
         }
     };
 }

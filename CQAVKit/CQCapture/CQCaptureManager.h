@@ -7,11 +7,11 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVCaptureDevice.h>
+#import <AVFoundation/AVMetadataObject.h>
 #import <UIKit/UIKit.h>
 #import <CoreMedia/CMSampleBuffer.h>
 
 @class AVCaptureSession;
-
 
 typedef NS_ENUM(NSUInteger, CQCaptureType) {
     CQCaptureTypeAll = 0,
@@ -95,6 +95,9 @@ NS_ASSUME_NONNULL_BEGIN
  @param coverImage 视频封面图片
  */
 - (void)assetLibraryWriteMovieFileSuccessWithCoverImage:(UIImage *)coverImage;
+
+#pragma mark - 元数据捕捉回调
+- (void)mediaCaptureMetadataSuccessWithMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects;
 
 @end
 
@@ -190,8 +193,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeAudioDataOutput;
 
 #pragma mark - Func 元数据输入输出配置
-/// 配置元数据输出
-- (BOOL)configMetadataOutput;
+/**
+ 配置元数据输出
+ @param metadatObjectTypes 元数据范围(人脸数据，二维码数据，一维码数据等)
+ */
+- (BOOL)configMetadataOutputWithType:(NSArray<AVMetadataObjectType> *)metadatObjectTypes;
 
 /// 移除元数据输出
 - (void)removeMetadataOutput;

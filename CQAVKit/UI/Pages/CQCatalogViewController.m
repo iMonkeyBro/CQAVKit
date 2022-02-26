@@ -44,8 +44,7 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
 #pragma mark - Lazy Load
 - (NSArray *)dataList {
     if (!_dataList) {
-        _dataList = @[@{@"title":@"相机捕捉", @"vc":@"CQCameraVC"},
-                      @{@"title":@"相机高级捕捉", @"vc":@"CQTestCaptureViewController"},
+        _dataList = @[@{@"title":@"相机捕捉(人脸识别)", @"vc":@"CQCameraVC"},
                       @{@"title":@"VideoToolBox 学习", @"vc":@"CQVTLearningVC"},
                       @{@"title":@"测试视频编解码", @"vc":@"CQTestVideoCoderVC"},
                       @{@"title":@"视频渲染", @"vc":@"CQTestCaptureViewController"},
