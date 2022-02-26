@@ -149,13 +149,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// 配置FPS
 - (void)configVideoFps:(NSUInteger)fps;
 
-#pragma mark - Func 视频输入输出配置
+#pragma mark - Func 视频输入配置
 /// 配置视频输入
 - (BOOL)configVideoInput:(NSError * _Nullable *)error;
 
 /// 移除视频输入设备
 - (void)removeVideoDeviceInput;
 
+#pragma mark - Func 视频输出配置
 /// 配置静态图片输出
 - (void)configStillImageOutput;
 
@@ -174,18 +175,26 @@ NS_ASSUME_NONNULL_BEGIN
 /// 移除视频数据输出
 - (void)removeVideoDataOutput;
 
-#pragma mark - Func 音频输入输出配置
+#pragma mark - Func 音频输入配置
 /// 配置音频输入
 - (BOOL)configAudioInput:(NSError * _Nullable *)error;
 
 /// 移除音频输入设备
 - (void)removeAudioDeviceInput;
 
+#pragma mark - Func 音频输出配置
 /// 配置音频数据输出
 - (BOOL)configAudioDataOutput;
 
 /// 移除音频数据输出
 - (void)removeAudioDataOutput;
+
+#pragma mark - Func 元数据输入输出配置
+/// 配置元数据输出
+- (BOOL)configMetadataOutput;
+
+/// 移除元数据输出
+- (void)removeMetadataOutput;
 
 #pragma mark - 静态图片捕捉
 /**

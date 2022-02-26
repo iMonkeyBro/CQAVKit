@@ -10,7 +10,8 @@
 @implementation NSFileManager (CQ)
 // 临时目录与模板字符串
 - (NSString *)temporaryDirectoryWithTemplateString:(NSString *)templateString {
-    NSString *mkdTemplate = [NSTemporaryDirectory() stringByAppendingPathComponent:templateString];
+    NSString *docPath = NSTemporaryDirectory();
+    NSString *mkdTemplate = [docPath stringByAppendingPathComponent:templateString];
     const char *templateCString = [mkdTemplate fileSystemRepresentation];
     char *buffer = (char *)malloc(strlen(templateCString) + 1);
     strcpy(buffer, templateCString);

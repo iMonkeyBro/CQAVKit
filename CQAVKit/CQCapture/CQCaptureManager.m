@@ -226,6 +226,16 @@ static const NSString *CameraAdjustingExposureContext;
     if (self.audioDataOutput) [self.captureSession removeOutput:self.audioDataOutput];
 }
 
+#pragma mark - Func 元数据输入输出配置
+- (BOOL)configMetadataOutput {
+    return YES;
+}
+
+
+- (void)removeMetadataOutput {
+    
+}
+
 #pragma mark - Func 会话
 // 开始会话
 - (void)startSessionSync {
@@ -364,9 +374,11 @@ static const NSString *CameraAdjustingExposureContext;
     }
     // 设置视频帧稳定
     // 判断是否支持视频稳定 可以显著提高视频的质量。只会在录制视频文件涉及
-    if (videoConnection.isVideoStabilizationSupported) {
-        videoConnection.enablesVideoStabilizationWhenAvailable = YES;
-    }
+//    if (videoConnection.isVideoStabilizationSupported) {
+//        videoConnection.enablesVideoStabilizationWhenAvailable = YES;
+//    }
+    
+    videoConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
 
     // 设置对焦
     AVCaptureDevice *device = [self getActiveCamera];
@@ -384,22 +396,6 @@ static const NSString *CameraAdjustingExposureContext;
             });
         }
     }
-    
-    /*
-    // 设置FPS
-    //获取当前支持的最大fps
-    float maxRate = [(AVFrameRateRange *)[device.activeFormat.videoSupportedFrameRateRanges objectAtIndex:0] maxFrameRate];
-    //如果想要设置的fps小于或等于最大fps，就进行修改
-    NSInteger fps = 30;
-    if (maxRate >= fps) {
-        //实际修改fps的代码
-        if ([device lockForConfiguration:NULL]) {
-            device.activeVideoMinFrameDuration = CMTimeMake(10, (int)(fps * 10));
-            device.activeVideoMaxFrameDuration = device.activeVideoMinFrameDuration;
-            [device unlockForConfiguration];
-        }
-    }
-     */
     
     self.movieFileOutputURL = [self getVideoTempPathURL];
     // 开始录制 参数1:录制保存路径  参数2:代理
@@ -450,10 +446,10 @@ static const NSString *CameraAdjustingExposureContext;
 /// 创建视频文件临时路径URL
 - (NSURL *)getVideoTempPathURL {
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *tempPath = [fileManager temporaryDirectoryWithTemplateString:@"video.XXXXXXXXXX"];
+    NSString *tempPath = [fileManager temporaryDirectoryWithTemplateString:@"video.XXXXXX"];
     if (tempPath) {
         NSString *filePath = [tempPath stringByAppendingPathComponent:@"temp_video.mov"];
-        return [NSURL URLWithString:filePath];
+        return [NSURL fileURLWithPath:filePath];
     }
     return nil;
 }
@@ -474,7 +470,7 @@ static const NSString *CameraAdjustingExposureContext;
             // 写入成功 回调封面图
             [self getVideoCoverImageWithVideoURL:videoURL callBlock:^(UIImage *coverImage) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteMovieFileSuccessWithCoverImageassetLibraryWriteMovieFileSuccessWithCoverImage:)]) {
+                    if (self.delegate && [self.delegate respondsToSelector:@selector(assetLibraryWriteMovieFileSuccessWithCoverImage:)]) {
                         [self.delegate assetLibraryWriteMovieFileSuccessWithCoverImage:coverImage];
                     }
                 });

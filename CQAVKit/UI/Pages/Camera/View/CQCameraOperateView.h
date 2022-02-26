@@ -9,6 +9,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSUInteger, CQCameraMode) {
+    CQCameraModePhoto = 0, ///< 拍照片
+    CQCameraModeVideo = 1,  ///< 拍视频
+};
+
 /// 下方的操作视图，点按快门，模式切换
 @interface CQCameraOperateView : UIView
 
@@ -16,6 +21,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy) void(^shutterBtnCallbackBlock)(void);  ///< 快门按钮回调
 @property (nonatomic, copy) void(^coverBtnCallbackBlock)(void);  ///< 封面按钮回调
+@property (nonatomic, copy) void(^changeModeCallbackBlock)(CQCameraMode cameraMode);  ///< 封面按钮回调
+@property (nonatomic, assign, readonly) CQCameraMode cameraMode;  ///< 相机模式
+
 @end
 
 NS_ASSUME_NONNULL_END

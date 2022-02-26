@@ -6,6 +6,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <CoreMedia/CMTime.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) void(^switchCameraBtnCallbackBlock)(void);  ///< 切换相机按钮回调
 
 @property (nonatomic, assign) NSInteger flashMode;  ///< 闪光灯模式
+
+@property (nonatomic, strong, readonly) UILabel *timeLabel;  ///< 时间label
+@property (nonatomic, assign) CMTime time;  ///< 时间
 
 @end
 

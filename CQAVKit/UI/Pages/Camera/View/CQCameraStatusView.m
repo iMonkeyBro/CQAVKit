@@ -9,7 +9,6 @@
 
 @interface CQCameraStatusView ()
 @property (nonatomic, strong) UIButton *flashBtn;  ///< 闪光灯按钮
-
 @property (nonatomic, strong) UILabel *timeLabel;  ///< 时间label
 @property (nonatomic, strong) UIButton *switchCameraBtn;  ///< 切换相机按钮
 
@@ -38,6 +37,33 @@
     }
 }
 
+- (void)setTime:(CMTime)time {
+    _time = time;
+    int seconds = floor(CMTimeGetSeconds(time));
+    if (seconds < 10) {
+        self.timeLabel.text = [NSString stringWithFormat:@"00:0%d",seconds];
+    } else if (seconds < 60) {
+        self.timeLabel.text = [NSString stringWithFormat:@"00:%d",seconds];
+    } else {
+        int currentMin = ceilf(seconds / 60);
+        int currentSec = seconds - currentMin * 60;
+        
+        NSString *minStr;
+        if (currentMin < 10) {
+            minStr = [NSString stringWithFormat:@"0%d",currentMin];
+        } else {
+            minStr = [NSString stringWithFormat:@"%d",currentMin];
+        }
+        NSString *secStr;
+        if (currentSec < 10) {
+            secStr = [NSString stringWithFormat:@"0%d",currentSec];
+        } else {
+            secStr = [NSString stringWithFormat:@"%d",currentSec];
+        }
+        self.timeLabel.text = [NSString stringWithFormat:@"%@:%@",minStr,secStr];
+    }
+}
+
 #pragma mark - Event
 - (void)flashAction {
     !self.flashBtnCallbackBlock ?: self.flashBtnCallbackBlock();
@@ -52,6 +78,7 @@
     self.layer.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f].CGColor;
     [self addSubview:self.flashBtn];
     [self addSubview:self.switchCameraBtn];
+    [self addSubview:self.timeLabel];
     [self.flashBtn makeConstraints:^(MASConstraintMaker *make) {
         make.centerY.equalTo(self);
         make.left.equalTo(7);
@@ -61,6 +88,9 @@
         make.centerY.equalTo(self);
         make.right.equalTo(-7);
         make.size.equalTo(CGSizeMake(35, 35));
+    }];
+    [self.timeLabel makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.centerY.equalTo(self);
     }];
 }
 
@@ -85,6 +115,14 @@
         [_switchCameraBtn addTarget:self action:@selector(switchCameraAction) forControlEvents:UIControlEventTouchUpInside];
     }
     return _switchCameraBtn;
+}
+
+- (UILabel *)timeLabel {
+    if (!_timeLabel) {
+        _timeLabel = [[UILabel alloc] init];
+        _timeLabel.textColor = UIColor.whiteColor;
+    }
+    return _timeLabel;
 }
 
 @end

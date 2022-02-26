@@ -17,7 +17,8 @@
 @property (nonatomic, strong) CQCapturePreviewView *previewView;  ///< 预览视图
 @property (nonatomic, strong) CQCameraStatusView *statusView;  ///< 上方状态视图
 @property (nonatomic, strong) CQCameraOperateView *operateView;  ///< 下方操作视图
-
+@property (nonatomic, assign) CQCameraMode cameraMode;  ///< 拍摄模式
+@property (nonatomic, strong) dispatch_source_t timer;
 @end
 
 @implementation CQCameraVC
@@ -38,6 +39,12 @@
 }
 
 #pragma mark - CQCaptureManagerDelegate
+#pragma mark 配置回调
+- (void)deviceConfigurationFailedWithError:(NSError *)error {
+    
+}
+
+#pragma mark 相机操作回调
 - (void)switchCameraSuccess {
     // 切换摄像头成功，重新赋值
     self.previewView.isFocusEnabled = self.captureManager.isSupportTapFocus;
@@ -50,11 +57,8 @@
     
 }
 
-- (void)deviceConfigurationFailedWithError:(NSError *)error {
-    
-}
-
-- (void)mediaCaptureFailedWithError:(NSError *)error {
+#pragma mark 静态图片捕捉
+- (void)mediaCaptureImageFailedWithError:(NSError *)error {
     
 }
 
@@ -65,11 +69,7 @@
     });
 }
 
-- (void)mediaCaptureVideoSuccess {
-    
-}
-
-- (void)assetLibraryWriteFailedWithError:(NSError *)error {
+- (void)assetLibraryWriteImageFailedWithError:(NSError *)error {
     
 }
 
@@ -79,8 +79,23 @@
     });
 }
 
-- (void)assetLibraryWriteMovieFileSuccessWithCoverImage:(UIImage *)coverImage {
+#pragma mark 视频捕捉
+- (void)mediaCaptureMovieFileSuccess {
     
+}
+
+- (void)mediaCaptureMovieFileFailedWithError:(NSError *)error {
+    
+}
+
+- (void)assetLibraryWriteMovieFileFailedWithError:(NSError *)error {
+    
+}
+
+- (void)assetLibraryWriteMovieFileSuccessWithCoverImage:(UIImage *)coverImage {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.operateView.coverBtn setImage:coverImage forState:UIControlStateNormal];
+    });
 }
 
 #pragma mark - CQCapturePreviewViewDelegate
@@ -115,7 +130,18 @@
     };
     self.operateView.shutterBtnCallbackBlock = ^{
         @strongify(self);
-        [self.captureManager captureStillImage];
+        if (self.cameraMode == CQCameraModePhoto) {
+            [self.captureManager captureStillImage];
+        } else if (self.cameraMode == CQCameraModeVideo) {
+            if (![self.captureManager isRecordingMovieFile]) {
+                [self.captureManager startRecordingMovieFile];
+                [self startListeningRecording];
+            } else {
+                [self.captureManager stopRecordingMovieFile];
+                [self stopListeningRecording];
+            }
+            
+        }
     };
     self.operateView.coverBtnCallbackBlock = ^{
         float deviceVersion = [[[UIDevice currentDevice] systemVersion] floatValue];
@@ -125,6 +151,30 @@
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"photos-redirect://"] options:@{@"jn":@"s"} completionHandler:nil];
         }
     };
+    self.operateView.changeModeCallbackBlock = ^(CQCameraMode cameraMode) {
+        @strongify(self);
+        self.cameraMode = cameraMode;
+        self.statusView.timeLabel.hidden = self.cameraMode == CQCameraModePhoto;
+        if (self.cameraMode == CQCameraModeVideo) {
+            [self.captureManager configVideoFps:60];
+        }
+    };
+}
+
+- (void)startListeningRecording {
+    self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    dispatch_source_set_timer(self.timer, DISPATCH_TIME_NOW, 0.25 * NSEC_PER_SEC, 1 * NSEC_PER_SEC);
+    dispatch_source_set_event_handler(self.timer, ^{
+        self.statusView.time = [self.captureManager movieFileRecordedDuration];
+    });
+    dispatch_resume(self.timer);
+}
+
+- (void)stopListeningRecording {
+    if (self.timer) {
+        dispatch_source_cancel(self.timer);
+        self.statusView.time = kCMTimeZero;
+    }
 }
 
 #pragma mark - CaptureSession
@@ -133,6 +183,7 @@
     [self.captureManager configSessionPreset:AVCaptureSessionPreset1920x1080];
     if ([self.captureManager configVideoInput:&error]) {
         [self.captureManager configStillImageOutput];
+        [self.captureManager configMovieFileOutput];
         self.previewView.session = self.captureManager.captureSession;
         [self.captureManager startSessionAsync];
     } else {

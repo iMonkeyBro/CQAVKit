@@ -33,6 +33,12 @@
  NALU数据，前4个字节起始位，标识一个NALU的开始，从第五位开始获取，第五位才是NALU数据类型
  获取第五位数据，转化十进制，然后判断数据类型。
  判断好类型，才能将NALU送入解码器，SPS、PPS不需要放入解码器，只需要用来构建解码器
+ 
+ 2 VideoToolBox
+ 基于CoreMedia CoreVideo CoreFoundation的C语言API
+ 一共有三种类型会话，编码会话，解码会话，像素移动
+ 从CoreMedia，CoreVideo衍生出时间或帧管理数据类型，CMTime，CVPixelBuffer
+ CMVideoFormatDescription 视频格式描述，包含视频尺寸等信息
  */
 
 #import "CQVideoDecoder.h"
@@ -51,7 +57,7 @@
     long _spsSize;
     uint8_t *_pps;
     long _ppsSize;
-    CMVideoFormatDescriptionRef _videoDesc;
+    CMVideoFormatDescriptionRef _videoDesc;  ///< 视频格式描述
 }
 
 #pragma mark - Init
@@ -139,21 +145,21 @@
     if (self.decodeSession) return YES;
     const uint8_t * const parameterSetPointers[2] = {_sps, _pps};
     const size_t parameterSetSizes[2] = {_spsSize, _ppsSize};
-    int naluHeaderLen = 4;
+    int naluHeaderLen = 4;  // 大端模式起始位长度
     
     /**
      根据sps pps设置解码参数
      param kCFAllocatorDefault 分配器
-     param 2 参数个数
-     param parameterSetPointers 参数集指针
+     param 解码参数个数 ，SPS PPS 所以填2
+     param parameterSetPointers 参数集指针(地址)
      param parameterSetSizes 参数集大小
-     param naluHeaderLen nalu nalu start code 的长度 4
+     param naluHeaderLen 起始位长度
      param _decodeDesc 解码器描述
      return 状态
      */
     OSStatus status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2, parameterSetPointers, parameterSetSizes, naluHeaderLen, &_videoDesc);
     if (status != noErr) {
-        NSLog(@"Video hard DecodeSession create H264ParameterSets(sps, pps) failed status= %d", (int)status);
+        NSLog(@"CQVideoDecoder-Video Format DecodeSession create H264ParameterSets(sps, pps) failed status= %d", (int)status);
         return NO;
     }
     
