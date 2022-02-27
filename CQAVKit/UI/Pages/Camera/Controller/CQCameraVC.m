@@ -164,7 +164,7 @@
         float deviceVersion = [[[UIDevice currentDevice] systemVersion] floatValue];
         if (deviceVersion < 10) {
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"PHOTOS://"]];
-        }else{
+        } else {
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"photos-redirect://"] options:@{@"jn":@"s"} completionHandler:nil];
         }
     };

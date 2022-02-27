@@ -177,17 +177,18 @@
             [self.overlayLayer addSublayer:faceLayer];
             self.faceLayers[faceID] = faceLayer;
         }
-        // 设置图层的transform属性 CATransform3DIdentity 图层默认变化 这样可以重新设置之前应用的变化
-        faceLayer.transform = CATransform3DIdentity;
         // 图层的大小 = 人脸的大小
         faceLayer.frame = faceObj.bounds;
-        // 判断人脸对象是否具有有效的斜倾交。
+        // 设置图层的transform属性 CATransform3DIdentity 先创建一个3D单元矩阵
+        faceLayer.transform = CATransform3DIdentity;
+        // 判断人脸对象是否具有有效的倾斜旋转。围绕Z轴，例人脸向肩膀转动
         if (faceObj.hasRollAngle) {
-            // 获取相应的CATransform3D值,将它与标识变化关联在一起，并设置transform属性
+            // 度数转弧度，拿到矩阵
             CATransform3D t = [self transformForRollAngle:faceObj.rollAngle];
+            // 矩阵相乘
             faceLayer.transform = CATransform3DConcat(faceLayer.transform, t);
         }
-        // 判断人脸对象是否具有有效的偏转角
+        // 判断人脸对象是否具有有效的偏转角，围绕Y轴，例如点头
         if (faceObj.hasYawAngle) {
             // 获取相应的CATransform3D值
             CATransform3D  t = [self transformForYawAngle:faceObj.yawAngle];
@@ -273,15 +274,16 @@
 
 #pragma mark - 人脸识别layer相关函数
 /**
- 透视效果
- @param eyePosition 观察者到投射面的距离
+ 透视投影
+ 投影方式 正投影，无法体现立体效果   透视投影，体现立体效果
+ @param eyePosition 观察者到投射面的距离，一般500-1000
  */
 - (CATransform3D)transform3DMakePerspective:(CGFloat)eyePosition {
     // CATransform3D 图层的旋转，缩放，偏移，歪斜和应用的透
     // CATransform3DIdentity是单位矩阵，该矩阵没有缩放，旋转，歪斜，透视。该矩阵应用到图层上，就是设置默认值。
     CATransform3D  transform = CATransform3DIdentity;
     // 透视效果（就是近大远小），是通过设置m34 m34 = -1.0/D 默认是0.D越小透视效果越明显
-    // eyePosition 观察者到投射面的距离
+    // eyePosition 观察者到投射面的距离，一般500-1000
     transform.m34 = -1.0/eyePosition;
     return transform;
 }
@@ -299,30 +301,32 @@
     return transformedMetadatas;
 }
 
-/// 将RollAngle 的 rollAngleInDegrees 值转换为 CATransform3D
+/// 将RollAngle 的 度数转弧度 再生成 CATransform3D
 - (CATransform3D)transformForRollAngle:(CGFloat)rollAngleInDegrees {
     // 将人脸对象得到的RollAngle 单位“度” 转为Core Animation需要的弧度值
     CGFloat rollAngleInRadians = [self degreesToRadians:rollAngleInDegrees];
-    // 将结果赋给CATransform3DMakeRotation x,y,z轴为0，0，1 得到绕Z轴倾斜角旋转转换
+    // RollAngle围绕Z旋转 x,y,z轴为0，0，1 得到绕Z轴倾斜角旋转转换
     return CATransform3DMakeRotation(rollAngleInRadians, 0.0f, 0.0f, 1.0f);
 }
 
-/// 将YawAngle 的 yawAngleInDegrees 值转换为 CATransform3D
+/// 将YawAngle 的 度数转弧度 再生成 CATransform3D
 - (CATransform3D)transformForYawAngle:(CGFloat)yawAngleInDegrees {
     // 将角度转换为弧度值
      CGFloat yawAngleInRaians = [self degreesToRadians:yawAngleInDegrees];
-    // 将结果CATransform3DMakeRotation x,y,z轴为0，-1，0 得到绕Y轴选择。
+    // 绕Y轴旋转
     // 由于overlayer 需要应用sublayerTransform，所以图层会投射到z轴上，人脸从一侧转向另一侧会有3D 效果
     CATransform3D yawTransform = CATransform3DMakeRotation(yawAngleInRaians, 0.0f, -1.0f, 0.0f);
     // 因为应用程序的界面固定为垂直方向，但需要为设备方向计算一个相应的旋转变换
-    // 如果不这样，会造成人脸图层的偏转效果不正确
+    // 如果不这样，会造成人脸图层的偏转效果不正确，会看起来比较傻不自然
     return CATransform3DConcat(yawTransform, [self orientationTransform]);
 }
 
+/// 度数转弧度
 - (CGFloat)degreesToRadians:(CGFloat)degrees {
     return degrees * M_PI / 180;
 }
 
+/// 根据设备方向调整角度
 - (CATransform3D)orientationTransform {
     CGFloat angle = 0.0;
     // 拿到设备方向
