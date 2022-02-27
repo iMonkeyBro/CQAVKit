@@ -51,12 +51,13 @@
         CFRelease(self.encodeSession);
         self.encodeSession = NULL;
     }
+    NSLog(@"CQVideoEncoder - dealloc !!!");
 }
 
 #pragma mark - Public Func
 - (void)videoEncodeWithSampleBuffer:(CMSampleBufferRef)sampleBuffer {
     CFRetain(sampleBuffer);
-    dispatch_async(_encodeQueue, ^{
+    dispatch_async(self.encodeQueue, ^{
         // 帧数据 未编码的数据
         CVImageBufferRef imageBuffer = (CVImageBufferRef)CMSampleBufferGetImageBuffer(sampleBuffer);
         // 该帧的时间戳
@@ -233,7 +234,7 @@ void videoEncoderCallBack(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     }
 }
 
-#pragma mark - Load
+#pragma mark - Lazy Load
 - (dispatch_queue_t)encodeQueue {
     if (!_encodeQueue) {
         _encodeQueue = dispatch_queue_create("CQVideoEncoder encode queue", DISPATCH_QUEUE_SERIAL);

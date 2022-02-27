@@ -9,12 +9,22 @@
 /* Begin PBXBuildFile section */
 		901D5799274DE67C00AA415C /* NSFileManager+CQ.m in Sources */ = {isa = PBXBuildFile; fileRef = 901D5798274DE67C00AA415C /* NSFileManager+CQ.m */; };
 		90293E272780550D0057C166 /* CQVTLearningVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 90293E262780550D0057C166 /* CQVTLearningVC.m */; };
+		902B41DE27CB9E43006A0EFB /* CQAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */; };
+		902B41E127CB9E52006A0EFB /* CQAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */; };
+		902B41E527CBAC11006A0EFB /* CQTestAudioCoderVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41E427CBAC11006A0EFB /* CQTestAudioCoderVC.m */; };
 		9059D5712751CA4D00661C42 /* CQCameraVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5702751CA4D00661C42 /* CQCameraVC.m */; };
 		9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5752751CB2600661C42 /* CQCameraOperateView.m */; };
 		9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5782751CB5300661C42 /* CQCameraStatusView.m */; };
 		90A590752786EEBF0038CFD2 /* CQAuthorizationTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 90A590742786EEBF0038CFD2 /* CQAuthorizationTool.m */; };
 		90B8F1B327C66F2F0011EB14 /* CQTestVideoCoderVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 90B8F1B227C66F2F0011EB14 /* CQTestVideoCoderVC.m */; };
 		90B8F1B627C671E80011EB14 /* CQPlayEAGLLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 90B8F1B527C671E80011EB14 /* CQPlayEAGLLayer.m */; };
+		90DE9CA227CB62FA00A7417E /* JXDatabaseConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9C9B27CB62FA00A7417E /* JXDatabaseConnector.swift */; };
+		90DE9CA327CB62FA00A7417E /* ExcelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9C9C27CB62FA00A7417E /* ExcelView.swift */; };
+		90DE9CA427CB62FA00A7417E /* JXTableListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9C9D27CB62FA00A7417E /* JXTableListViewController.swift */; };
+		90DE9CA527CB62FA00A7417E /* JXFileBrowserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9C9E27CB62FA00A7417E /* JXFileBrowserController.swift */; };
+		90DE9CA627CB62FA00A7417E /* JXTextPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9C9F27CB62FA00A7417E /* JXTextPreviewViewController.swift */; };
+		90DE9CA727CB62FA00A7417E /* JXFilePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9CA027CB62FA00A7417E /* JXFilePreviewViewController.swift */; };
+		90DE9CA827CB62FA00A7417E /* JXTableContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9CA127CB62FA00A7417E /* JXTableContentViewController.swift */; };
 		90F2300A2758F1E900AFD137 /* CQScreenTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F230092758F1E900AFD137 /* CQScreenTool.m */; };
 		90F2300D2758F54F00AFD137 /* UIButton+CQExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F2300C2758F54F00AFD137 /* UIButton+CQExtension.m */; };
 		90F230102758FBA600AFD137 /* CQCameraShutterButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 90F2300F2758FBA600AFD137 /* CQCameraShutterButton.m */; };
@@ -61,6 +71,12 @@
 		901D5798274DE67C00AA415C /* NSFileManager+CQ.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSFileManager+CQ.m"; sourceTree = "<group>"; };
 		90293E252780550D0057C166 /* CQVTLearningVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQVTLearningVC.h; sourceTree = "<group>"; };
 		90293E262780550D0057C166 /* CQVTLearningVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQVTLearningVC.m; sourceTree = "<group>"; };
+		902B41DC27CB9E43006A0EFB /* CQAudioEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQAudioEncoder.h; sourceTree = "<group>"; };
+		902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQAudioEncoder.m; sourceTree = "<group>"; };
+		902B41DF27CB9E52006A0EFB /* CQAudioDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQAudioDecoder.h; sourceTree = "<group>"; };
+		902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQAudioDecoder.m; sourceTree = "<group>"; };
+		902B41E327CBAC11006A0EFB /* CQTestAudioCoderVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQTestAudioCoderVC.h; sourceTree = "<group>"; };
+		902B41E427CBAC11006A0EFB /* CQTestAudioCoderVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQTestAudioCoderVC.m; sourceTree = "<group>"; };
 		9059D56F2751CA4D00661C42 /* CQCameraVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraVC.h; sourceTree = "<group>"; };
 		9059D5702751CA4D00661C42 /* CQCameraVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraVC.m; sourceTree = "<group>"; };
 		9059D5742751CB2600661C42 /* CQCameraOperateView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraOperateView.h; sourceTree = "<group>"; };
@@ -73,6 +89,13 @@
 		90B8F1B227C66F2F0011EB14 /* CQTestVideoCoderVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQTestVideoCoderVC.m; sourceTree = "<group>"; };
 		90B8F1B427C671E80011EB14 /* CQPlayEAGLLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQPlayEAGLLayer.h; sourceTree = "<group>"; };
 		90B8F1B527C671E80011EB14 /* CQPlayEAGLLayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQPlayEAGLLayer.m; sourceTree = "<group>"; };
+		90DE9C9B27CB62FA00A7417E /* JXDatabaseConnector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JXDatabaseConnector.swift; sourceTree = "<group>"; };
+		90DE9C9C27CB62FA00A7417E /* ExcelView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcelView.swift; sourceTree = "<group>"; };
+		90DE9C9D27CB62FA00A7417E /* JXTableListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JXTableListViewController.swift; sourceTree = "<group>"; };
+		90DE9C9E27CB62FA00A7417E /* JXFileBrowserController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JXFileBrowserController.swift; sourceTree = "<group>"; };
+		90DE9C9F27CB62FA00A7417E /* JXTextPreviewViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JXTextPreviewViewController.swift; sourceTree = "<group>"; };
+		90DE9CA027CB62FA00A7417E /* JXFilePreviewViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JXFilePreviewViewController.swift; sourceTree = "<group>"; };
+		90DE9CA127CB62FA00A7417E /* JXTableContentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JXTableContentViewController.swift; sourceTree = "<group>"; };
 		90F230082758F1E900AFD137 /* CQScreenTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQScreenTool.h; sourceTree = "<group>"; };
 		90F230092758F1E900AFD137 /* CQScreenTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQScreenTool.m; sourceTree = "<group>"; };
 		90F2300B2758F54F00AFD137 /* UIButton+CQExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIButton+CQExtension.h"; sourceTree = "<group>"; };
@@ -188,6 +211,15 @@
 			path = Controller;
 			sourceTree = "<group>";
 		};
+		902B41E227CBABF4006A0EFB /* TestAudioCoder */ = {
+			isa = PBXGroup;
+			children = (
+				902B41E327CBAC11006A0EFB /* CQTestAudioCoderVC.h */,
+				902B41E427CBAC11006A0EFB /* CQTestAudioCoderVC.m */,
+			);
+			path = TestAudioCoder;
+			sourceTree = "<group>";
+		};
 		9059D56E2751C8FE00661C42 /* Camera */ = {
 			isa = PBXGroup;
 			children = (
@@ -228,6 +260,20 @@
 			path = TestVideoCoder;
 			sourceTree = "<group>";
 		};
+		90DE9C9A27CB62FA00A7417E /* JXFileBrowserController */ = {
+			isa = PBXGroup;
+			children = (
+				90DE9C9B27CB62FA00A7417E /* JXDatabaseConnector.swift */,
+				90DE9C9C27CB62FA00A7417E /* ExcelView.swift */,
+				90DE9C9D27CB62FA00A7417E /* JXTableListViewController.swift */,
+				90DE9C9E27CB62FA00A7417E /* JXFileBrowserController.swift */,
+				90DE9C9F27CB62FA00A7417E /* JXTextPreviewViewController.swift */,
+				90DE9CA027CB62FA00A7417E /* JXFilePreviewViewController.swift */,
+				90DE9CA127CB62FA00A7417E /* JXTableContentViewController.swift */,
+			);
+			path = JXFileBrowserController;
+			sourceTree = "<group>";
+		};
 		9DF394692725C5C10095E269 = {
 			isa = PBXGroup;
 			children = (
@@ -253,6 +299,7 @@
 		9DF394742725C5C10095E269 /* CQAVKit */ = {
 			isa = PBXGroup;
 			children = (
+				90DE9C9A27CB62FA00A7417E /* JXFileBrowserController */,
 				9DF394C82725CC4A0095E269 /* CQCapture */,
 				9DF394C72725CC220095E269 /* CQCoder */,
 				9DF394C62725CC0E0095E269 /* CQPlayer */,
@@ -307,6 +354,7 @@
 		9DF394AC2725C6570095E269 /* Pages */ = {
 			isa = PBXGroup;
 			children = (
+				902B41E227CBABF4006A0EFB /* TestAudioCoder */,
 				90B8F1B027C66E880011EB14 /* TestVideoCoder */,
 				90293E23278054CA0057C166 /* VTLearning */,
 				9059D56E2751C8FE00661C42 /* Camera */,
@@ -386,6 +434,10 @@
 				9D1D3DDC27AE9180009E7329 /* CQVideoDecoder.m */,
 				9D1D3DDE27AEC0E2009E7329 /* CQCoderConfig.h */,
 				9D1D3DDF27AEC0E2009E7329 /* CQCoderConfig.m */,
+				902B41DC27CB9E43006A0EFB /* CQAudioEncoder.h */,
+				902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */,
+				902B41DF27CB9E52006A0EFB /* CQAudioDecoder.h */,
+				902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */,
 			);
 			path = CQCoder;
 			sourceTree = "<group>";
@@ -559,8 +611,11 @@
 				9DF394BA2725C9C10095E269 /* AppDelegate+Init.m in Sources */,
 				9DF394C22725CAC10095E269 /* CQNavigationController.m in Sources */,
 				9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */,
+				90DE9CA427CB62FA00A7417E /* JXTableListViewController.swift in Sources */,
 				90F2300D2758F54F00AFD137 /* UIButton+CQExtension.m in Sources */,
+				90DE9CA327CB62FA00A7417E /* ExcelView.swift in Sources */,
 				9D1D3DDD27AE9180009E7329 /* CQVideoDecoder.m in Sources */,
+				902B41E127CB9E52006A0EFB /* CQAudioDecoder.m in Sources */,
 				9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */,
 				90A590752786EEBF0038CFD2 /* CQAuthorizationTool.m in Sources */,
 				901D5799274DE67C00AA415C /* NSFileManager+CQ.m in Sources */,
@@ -569,15 +624,22 @@
 				9D1FB5C6272B12AC00F74260 /* CQCaptureManager.m in Sources */,
 				9D1D3DE027AEC0E2009E7329 /* CQCoderConfig.m in Sources */,
 				9DF394772725C5C10095E269 /* AppDelegate.m in Sources */,
+				90DE9CA527CB62FA00A7417E /* JXFileBrowserController.swift in Sources */,
+				902B41DE27CB9E43006A0EFB /* CQAudioEncoder.m in Sources */,
+				902B41E527CBAC11006A0EFB /* CQTestAudioCoderVC.m in Sources */,
 				9DF394882725C5C20095E269 /* main.m in Sources */,
 				9DF394BD2725CA160095E269 /* CQCatalogViewController.m in Sources */,
 				9059D5712751CA4D00661C42 /* CQCameraVC.m in Sources */,
+				90DE9CA727CB62FA00A7417E /* JXFilePreviewViewController.swift in Sources */,
 				9D1D3DDA27AE9172009E7329 /* CQVideoEncoder.m in Sources */,
+				90DE9CA827CB62FA00A7417E /* JXTableContentViewController.swift in Sources */,
 				9DF394B12725C85E0095E269 /* CQBaseViewController.m in Sources */,
 				9DC5068D2729B8C100FE7C27 /* CQCapturePreviewView.m in Sources */,
 				9DF394C52725CB530095E269 /* CQTestCaptureViewController.m in Sources */,
 				90B8F1B627C671E80011EB14 /* CQPlayEAGLLayer.m in Sources */,
+				90DE9CA627CB62FA00A7417E /* JXTextPreviewViewController.swift in Sources */,
 				90B8F1B327C66F2F0011EB14 /* CQTestVideoCoderVC.m in Sources */,
+				90DE9CA227CB62FA00A7417E /* JXDatabaseConnector.swift in Sources */,
 				90F2300A2758F1E900AFD137 /* CQScreenTool.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -754,6 +816,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cq.CQAVKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -775,6 +838,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cq.CQAVKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -782,6 +846,7 @@
 		9DF394A52725C5C20095E269 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SY5B3H4K8B;
@@ -802,6 +867,7 @@
 		9DF394A62725C5C20095E269 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SY5B3H4K8B;
@@ -822,6 +888,7 @@
 		9DF394A82725C5C20095E269 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SY5B3H4K8B;
 				INFOPLIST_FILE = CQAVKitUITests/Info.plist;
@@ -840,6 +907,7 @@
 		9DF394A92725C5C20095E269 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SY5B3H4K8B;
 				INFOPLIST_FILE = CQAVKitUITests/Info.plist;

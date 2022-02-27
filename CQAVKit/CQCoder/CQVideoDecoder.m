@@ -74,6 +74,7 @@
         CFRelease(self.decodeSession);
         self.decodeSession = NULL;
     }
+    NSLog(@"CQVideoDecoder - dealloc !!!");
 }
 
 #pragma mark - Public Func
@@ -140,6 +141,7 @@
     }
 }
 
+// 拿到SPS\PPS才能拿到CMVideoFormatDescriptionRef，CMVideoFormatDescriptionRef拿到才能初始化解码会话
 /// 初始化解码会话
 - (BOOL)initDecoderSession {
     if (self.decodeSession) return YES;
@@ -200,7 +202,6 @@
     callbackRecord.decompressionOutputRefCon = (__bridge void * _Nullable)(self);
     
     // 创建session
-    
     /**
      @function    VTDecompressionSessionCreate
      @abstract    创建用于解压缩视频帧的会话。
@@ -214,28 +215,36 @@
      */
     status = VTDecompressionSessionCreate(kCFAllocatorDefault, _videoDesc, NULL, (__bridge CFDictionaryRef _Nullable)(destinationPixBufferAttrs), &callbackRecord, &_decodeSession);
     if (status != noErr) {
-        NSLog(@"Video hard DecodeSession create failed status= %d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard DecodeSession create failed status= %d", (int)status);
         return NO;
     }
     
     // 设置解码会话属性
     // 实时解码
     status = VTSessionSetProperty(self.decodeSession, kVTDecompressionPropertyKey_RealTime,kCFBooleanTrue);
-    NSLog(@"Vidoe hard decodeSession set property RealTime status = %d", (int)status);
+    NSLog(@"CQVideoDncoder-Vidoe hard decodeSession set property RealTime status = %d", (int)status);
     
     return YES;
 }
 
 /// 接受帧数据解码
 - (CVPixelBufferRef)decode:(uint8_t *)frame withSize:(uint32_t)frameSize {
+    /**
+     CVPixelBufferRef 解码后/编码前的数据
+     CMBlockBufferRef 编码后的数据
+     解码函数接受的数据类型是CMSampleBufferRef，需要将frame 进行两次包装
+     frame->CMBlockBufferRef->CMSampleBufferRef
+     */
+    
+    // TODO: - outputPixelBuffer可以剔除
     CVPixelBufferRef outputPixelBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
     CMBlockBufferFlags flag0 = 0;
     
     // 创建blockBuffer
     /*!
-     参数1: structureAllocator kCFAllocatorDefault
-     参数2: memoryBlock  frame
+     参数1: structureAllocator kCFAllocatorDefault 默认内存分配
+     参数2: memoryBlock  内容 frame
      参数3: frame size
      参数4: blockAllocator: Pass NULL
      参数5: customBlockSource Pass NULL
@@ -247,7 +256,7 @@
     OSStatus status = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, frame, frameSize, kCFAllocatorNull, NULL, 0, frameSize, flag0, &blockBuffer);
     
     if (status != kCMBlockBufferNoErr) {
-        NSLog(@"Video hard decode create blockBuffer error code=%d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard decode create blockBuffer error code=%d", (int)status);
         return outputPixelBuffer;
     }
     
@@ -269,7 +278,7 @@
     status = CMSampleBufferCreateReady(kCFAllocatorDefault, blockBuffer, _videoDesc, 1, 0, NULL, 1, sampleSizeArray, &sampleBuffer);
     
     if (status != noErr || !sampleBuffer) {
-        NSLog(@"Video hard decode create sampleBuffer failed status=%d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard decode create sampleBuffer failed status=%d", (int)status);
         CFRelease(blockBuffer);
         return outputPixelBuffer;
     }
@@ -290,11 +299,11 @@
     status = VTDecompressionSessionDecodeFrame(_decodeSession, sampleBuffer, flag1, &outputPixelBuffer, &infoFlag);
     
     if (status == kVTInvalidSessionErr) {
-        NSLog(@"Video hard decode  InvalidSessionErr status =%d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard decode  InvalidSessionErr status =%d", (int)status);
     } else if (status == kVTVideoDecoderBadDataErr) {
-        NSLog(@"Video hard decode  BadData status =%d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard decode  BadData status =%d", (int)status);
     } else if (status != noErr) {
-        NSLog(@"Video hard decode failed status =%d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard decode failed status =%d", (int)status);
     }
     CFRelease(sampleBuffer);
     CFRelease(blockBuffer);
@@ -304,7 +313,7 @@
 #pragma mark - VideoToolBox解码完成回调
 void videoDecoderCallBack(void * CM_NULLABLE decompressionOutputRefCon, void * CM_NULLABLE sourceFrameRefCon, OSStatus status, VTDecodeInfoFlags infoFlags, CM_NULLABLE CVImageBufferRef imageBuffer, CMTime presentationTimeStamp, CMTime presentationDuration ) {
     if (status != noErr) {
-        NSLog(@"Video hard decode callback error status=%d", (int)status);
+        NSLog(@"CQVideoDncoder-Video hard decode callback error status=%d", (int)status);
         return;
     }
     // 拿到解码后的数据sourceFrameRefCon -> CVPixelBufferRef

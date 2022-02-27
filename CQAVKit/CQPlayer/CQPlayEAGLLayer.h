@@ -12,11 +12,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CQPlayEAGLLayer : CAEAGLLayer
 
-@property (nonatomic, assign) CVPixelBufferRef pixelBuffer;
-
 - (instancetype)initWithFrame:(CGRect)frame;
 
+/// 重新设置帧缓存区与渲染缓存区
 - (void)resetRenderBuffer;
+
+@property (nonatomic, assign) CVPixelBufferRef pixelBuffer;  ///< 需要渲染的buffer
 
 @end
 

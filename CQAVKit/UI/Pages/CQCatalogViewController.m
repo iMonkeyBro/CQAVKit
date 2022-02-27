@@ -6,7 +6,7 @@
 //
 
 #import "CQCatalogViewController.h"
-
+#import <CQAVKit-Swift.h>
 
 static NSString *identifier = @"CQCatalogViewControllerCell";
 
@@ -25,6 +25,12 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
 
 #pragma mark - UITableViewDelegate, UITableViewDataSource
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    if ([self.dataList[indexPath.row][@"title"] isEqualToString:@"沙河目录"]) {
+        NSString *path = NSHomeDirectory();
+        JXFileBrowserController *fileVC = [[JXFileBrowserController alloc] initWithPath:path];
+        [self.navigationController pushViewController:fileVC animated:YES];
+        return;
+    }
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     UIViewController *vc = [NSClassFromString(self.dataList[indexPath.row][@"vc"]) new];
     vc.title = self.dataList[indexPath.row][@"title"];
@@ -47,9 +53,10 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
         _dataList = @[@{@"title":@"相机捕捉(人脸识别)", @"vc":@"CQCameraVC"},
                       @{@"title":@"VideoToolBox 学习", @"vc":@"CQVTLearningVC"},
                       @{@"title":@"测试视频编解码", @"vc":@"CQTestVideoCoderVC"},
-                      @{@"title":@"视频渲染", @"vc":@"CQTestCaptureViewController"},
-                      @{@"title":@"音频编码", @"vc":@"CQTestCaptureViewController"},
-                      @{@"title":@"音频解码", @"vc":@"CQTestCaptureViewController"},];
+                      @{@"title":@"测试音频编解码", @"vc":@"CQTestAudioCoderVC"},
+                      @{@"title":@"Test", @"vc":@"CQTestCaptureViewController"},
+                      @{@"title":@"Test", @"vc":@"CQTestCaptureViewController"},
+                      @{@"title":@"沙盒目录", @"vc":@"CQTestCaptureViewController"},];
     }
     return _dataList;
 }
