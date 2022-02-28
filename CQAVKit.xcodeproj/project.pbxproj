@@ -12,6 +12,7 @@
 		902B41DE27CB9E43006A0EFB /* CQAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */; };
 		902B41E127CB9E52006A0EFB /* CQAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */; };
 		902B41E527CBAC11006A0EFB /* CQTestAudioCoderVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41E427CBAC11006A0EFB /* CQTestAudioCoderVC.m */; };
+		902B41EA27CCDB4D006A0EFB /* CQAudioPCMPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41E927CCDB4D006A0EFB /* CQAudioPCMPlayer.m */; };
 		9059D5712751CA4D00661C42 /* CQCameraVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5702751CA4D00661C42 /* CQCameraVC.m */; };
 		9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5752751CB2600661C42 /* CQCameraOperateView.m */; };
 		9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5782751CB5300661C42 /* CQCameraStatusView.m */; };
@@ -77,6 +78,8 @@
 		902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQAudioDecoder.m; sourceTree = "<group>"; };
 		902B41E327CBAC11006A0EFB /* CQTestAudioCoderVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQTestAudioCoderVC.h; sourceTree = "<group>"; };
 		902B41E427CBAC11006A0EFB /* CQTestAudioCoderVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQTestAudioCoderVC.m; sourceTree = "<group>"; };
+		902B41E827CCDB4D006A0EFB /* CQAudioPCMPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQAudioPCMPlayer.h; sourceTree = "<group>"; };
+		902B41E927CCDB4D006A0EFB /* CQAudioPCMPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQAudioPCMPlayer.m; sourceTree = "<group>"; };
 		9059D56F2751CA4D00661C42 /* CQCameraVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraVC.h; sourceTree = "<group>"; };
 		9059D5702751CA4D00661C42 /* CQCameraVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraVC.m; sourceTree = "<group>"; };
 		9059D5742751CB2600661C42 /* CQCameraOperateView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQCameraOperateView.h; sourceTree = "<group>"; };
@@ -218,6 +221,28 @@
 				902B41E427CBAC11006A0EFB /* CQTestAudioCoderVC.m */,
 			);
 			path = TestAudioCoder;
+			sourceTree = "<group>";
+		};
+		902B41E627CCDB1D006A0EFB /* VideoCoder */ = {
+			isa = PBXGroup;
+			children = (
+				9D1D3DD827AE9172009E7329 /* CQVideoEncoder.h */,
+				9D1D3DD927AE9172009E7329 /* CQVideoEncoder.m */,
+				9D1D3DDB27AE9180009E7329 /* CQVideoDecoder.h */,
+				9D1D3DDC27AE9180009E7329 /* CQVideoDecoder.m */,
+			);
+			path = VideoCoder;
+			sourceTree = "<group>";
+		};
+		902B41E727CCDB28006A0EFB /* AudioCoder */ = {
+			isa = PBXGroup;
+			children = (
+				902B41DC27CB9E43006A0EFB /* CQAudioEncoder.h */,
+				902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */,
+				902B41DF27CB9E52006A0EFB /* CQAudioDecoder.h */,
+				902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */,
+			);
+			path = AudioCoder;
 			sourceTree = "<group>";
 		};
 		9059D56E2751C8FE00661C42 /* Camera */ = {
@@ -421,6 +446,8 @@
 			children = (
 				90B8F1B427C671E80011EB14 /* CQPlayEAGLLayer.h */,
 				90B8F1B527C671E80011EB14 /* CQPlayEAGLLayer.m */,
+				902B41E827CCDB4D006A0EFB /* CQAudioPCMPlayer.h */,
+				902B41E927CCDB4D006A0EFB /* CQAudioPCMPlayer.m */,
 			);
 			path = CQPlayer;
 			sourceTree = "<group>";
@@ -428,16 +455,10 @@
 		9DF394C72725CC220095E269 /* CQCoder */ = {
 			isa = PBXGroup;
 			children = (
-				9D1D3DD827AE9172009E7329 /* CQVideoEncoder.h */,
-				9D1D3DD927AE9172009E7329 /* CQVideoEncoder.m */,
-				9D1D3DDB27AE9180009E7329 /* CQVideoDecoder.h */,
-				9D1D3DDC27AE9180009E7329 /* CQVideoDecoder.m */,
+				902B41E727CCDB28006A0EFB /* AudioCoder */,
+				902B41E627CCDB1D006A0EFB /* VideoCoder */,
 				9D1D3DDE27AEC0E2009E7329 /* CQCoderConfig.h */,
 				9D1D3DDF27AEC0E2009E7329 /* CQCoderConfig.m */,
-				902B41DC27CB9E43006A0EFB /* CQAudioEncoder.h */,
-				902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */,
-				902B41DF27CB9E52006A0EFB /* CQAudioDecoder.h */,
-				902B41E027CB9E52006A0EFB /* CQAudioDecoder.m */,
 			);
 			path = CQCoder;
 			sourceTree = "<group>";
@@ -626,6 +647,7 @@
 				9DF394772725C5C10095E269 /* AppDelegate.m in Sources */,
 				90DE9CA527CB62FA00A7417E /* JXFileBrowserController.swift in Sources */,
 				902B41DE27CB9E43006A0EFB /* CQAudioEncoder.m in Sources */,
+				902B41EA27CCDB4D006A0EFB /* CQAudioPCMPlayer.m in Sources */,
 				902B41E527CBAC11006A0EFB /* CQTestAudioCoderVC.m in Sources */,
 				9DF394882725C5C20095E269 /* main.m in Sources */,
 				9DF394BD2725CA160095E269 /* CQCatalogViewController.m in Sources */,
