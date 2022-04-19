@@ -234,7 +234,7 @@ const GLchar *shader_vsh = (const GLchar*)"attribute vec4 position;"
      */
     err = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault, NULL, _context, NULL, &_videoTextureCache);
     if (err != noErr) {
-        NSLog(@"Error at CVOpenGLESTextureCacheCreate %d", err);
+        NSLog(@"Error at CVOpenGLESTextureCacheCreate %d", err);            
         return;
     }
     

@@ -25,13 +25,13 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
 
 #pragma mark - UITableViewDelegate, UITableViewDataSource
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if ([self.dataList[indexPath.row][@"title"] isEqualToString:@"沙河目录"]) {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if ([self.dataList[indexPath.row][@"title"] isEqualToString:@"沙盒目录"]) {
         NSString *path = NSHomeDirectory();
         JXFileBrowserController *fileVC = [[JXFileBrowserController alloc] initWithPath:path];
         [self.navigationController pushViewController:fileVC animated:YES];
         return;
     }
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
     UIViewController *vc = [NSClassFromString(self.dataList[indexPath.row][@"vc"]) new];
     vc.title = self.dataList[indexPath.row][@"title"];
     [self.navigationController pushViewController:vc animated:YES];
@@ -54,9 +54,9 @@ static NSString *identifier = @"CQCatalogViewControllerCell";
                       @{@"title":@"VideoToolBox 学习", @"vc":@"CQVTLearningVC"},
                       @{@"title":@"测试视频编解码", @"vc":@"CQTestVideoCoderVC"},
                       @{@"title":@"测试音频编解码", @"vc":@"CQTestAudioCoderVC"},
-                      @{@"title":@"Test", @"vc":@"CQTestCaptureViewController"},
-                      @{@"title":@"Test", @"vc":@"CQTestCaptureViewController"},
-                      @{@"title":@"沙盒目录", @"vc":@"CQTestCaptureViewController"},];
+                      @{@"title":@"Test", @"vc":@"CQTestViewController"},
+                      @{@"title":@"Test", @"vc":@"CQTestViewController"},
+                      @{@"title":@"沙盒目录", @"vc":@"JXFileBrowserController"},];
     }
     return _dataList;
 }

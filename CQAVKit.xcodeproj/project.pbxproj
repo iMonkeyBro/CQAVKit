@@ -17,6 +17,7 @@
 		9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5752751CB2600661C42 /* CQCameraOperateView.m */; };
 		9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9059D5782751CB5300661C42 /* CQCameraStatusView.m */; };
 		90A590752786EEBF0038CFD2 /* CQAuthorizationTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 90A590742786EEBF0038CFD2 /* CQAuthorizationTool.m */; };
+		90AAC59428085B4800677BDC /* CQTestViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 90AAC59328085B4800677BDC /* CQTestViewController.m */; };
 		90B8F1B327C66F2F0011EB14 /* CQTestVideoCoderVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 90B8F1B227C66F2F0011EB14 /* CQTestVideoCoderVC.m */; };
 		90B8F1B627C671E80011EB14 /* CQPlayEAGLLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 90B8F1B527C671E80011EB14 /* CQPlayEAGLLayer.m */; };
 		90DE9CA227CB62FA00A7417E /* JXDatabaseConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DE9C9B27CB62FA00A7417E /* JXDatabaseConnector.swift */; };
@@ -88,6 +89,8 @@
 		9059D5782751CB5300661C42 /* CQCameraStatusView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQCameraStatusView.m; sourceTree = "<group>"; };
 		90A590732786EEBF0038CFD2 /* CQAuthorizationTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQAuthorizationTool.h; sourceTree = "<group>"; };
 		90A590742786EEBF0038CFD2 /* CQAuthorizationTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQAuthorizationTool.m; sourceTree = "<group>"; };
+		90AAC59228085B4800677BDC /* CQTestViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQTestViewController.h; sourceTree = "<group>"; };
+		90AAC59328085B4800677BDC /* CQTestViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQTestViewController.m; sourceTree = "<group>"; };
 		90B8F1B127C66F2F0011EB14 /* CQTestVideoCoderVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQTestVideoCoderVC.h; sourceTree = "<group>"; };
 		90B8F1B227C66F2F0011EB14 /* CQTestVideoCoderVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQTestVideoCoderVC.m; sourceTree = "<group>"; };
 		90B8F1B427C671E80011EB14 /* CQPlayEAGLLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQPlayEAGLLayer.h; sourceTree = "<group>"; };
@@ -276,6 +279,15 @@
 			path = View;
 			sourceTree = "<group>";
 		};
+		90AAC59128085B2F00677BDC /* TestPage */ = {
+			isa = PBXGroup;
+			children = (
+				90AAC59228085B4800677BDC /* CQTestViewController.h */,
+				90AAC59328085B4800677BDC /* CQTestViewController.m */,
+			);
+			path = TestPage;
+			sourceTree = "<group>";
+		};
 		90B8F1B027C66E880011EB14 /* TestVideoCoder */ = {
 			isa = PBXGroup;
 			children = (
@@ -379,6 +391,7 @@
 		9DF394AC2725C6570095E269 /* Pages */ = {
 			isa = PBXGroup;
 			children = (
+				90AAC59128085B2F00677BDC /* TestPage */,
 				902B41E227CBABF4006A0EFB /* TestAudioCoder */,
 				90B8F1B027C66E880011EB14 /* TestVideoCoder */,
 				90293E23278054CA0057C166 /* VTLearning */,
@@ -634,6 +647,7 @@
 				9059D5762751CB2600661C42 /* CQCameraOperateView.m in Sources */,
 				90DE9CA427CB62FA00A7417E /* JXTableListViewController.swift in Sources */,
 				90F2300D2758F54F00AFD137 /* UIButton+CQExtension.m in Sources */,
+				90AAC59428085B4800677BDC /* CQTestViewController.m in Sources */,
 				90DE9CA327CB62FA00A7417E /* ExcelView.swift in Sources */,
 				9D1D3DDD27AE9180009E7329 /* CQVideoDecoder.m in Sources */,
 				902B41E127CB9E52006A0EFB /* CQAudioDecoder.m in Sources */,
