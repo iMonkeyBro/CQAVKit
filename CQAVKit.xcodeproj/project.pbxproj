@@ -46,7 +46,6 @@
 		9DF394BA2725C9C10095E269 /* AppDelegate+Init.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DF394B92725C9C10095E269 /* AppDelegate+Init.m */; };
 		9DF394BD2725CA160095E269 /* CQCatalogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DF394BC2725CA160095E269 /* CQCatalogViewController.m */; };
 		9DF394C22725CAC10095E269 /* CQNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DF394C12725CAC10095E269 /* CQNavigationController.m */; };
-		9DF394C52725CB530095E269 /* CQTestCaptureViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DF394C42725CB530095E269 /* CQTestCaptureViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -141,8 +140,6 @@
 		9DF394BE2725CA6A0095E269 /* CQMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CQMacros.h; sourceTree = "<group>"; };
 		9DF394C02725CAC10095E269 /* CQNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQNavigationController.h; sourceTree = "<group>"; };
 		9DF394C12725CAC10095E269 /* CQNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQNavigationController.m; sourceTree = "<group>"; };
-		9DF394C32725CB530095E269 /* CQTestCaptureViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQTestCaptureViewController.h; sourceTree = "<group>"; };
-		9DF394C42725CB530095E269 /* CQTestCaptureViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CQTestCaptureViewController.m; sourceTree = "<group>"; };
 		F86E50FC46FE8FBB29480934 /* Pods-CQAVKit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CQAVKit.release.xcconfig"; path = "Target Support Files/Pods-CQAVKit/Pods-CQAVKit.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -398,8 +395,6 @@
 				9059D56E2751C8FE00661C42 /* Camera */,
 				9DF394BB2725CA160095E269 /* CQCatalogViewController.h */,
 				9DF394BC2725CA160095E269 /* CQCatalogViewController.m */,
-				9DF394C32725CB530095E269 /* CQTestCaptureViewController.h */,
-				9DF394C42725CB530095E269 /* CQTestCaptureViewController.m */,
 			);
 			path = Pages;
 			sourceTree = "<group>";
@@ -671,7 +666,6 @@
 				90DE9CA827CB62FA00A7417E /* JXTableContentViewController.swift in Sources */,
 				9DF394B12725C85E0095E269 /* CQBaseViewController.m in Sources */,
 				9DC5068D2729B8C100FE7C27 /* CQCapturePreviewView.m in Sources */,
-				9DF394C52725CB530095E269 /* CQTestCaptureViewController.m in Sources */,
 				90B8F1B627C671E80011EB14 /* CQPlayEAGLLayer.m in Sources */,
 				90DE9CA627CB62FA00A7417E /* JXTextPreviewViewController.swift in Sources */,
 				90B8F1B327C66F2F0011EB14 /* CQTestVideoCoderVC.m in Sources */,

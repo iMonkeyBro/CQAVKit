@@ -263,7 +263,7 @@ static const NSString *CameraAdjustingExposureContext;
 }
 
 #pragma mark - Func 会话
-// 开始会话
+// 同步开始会话
 - (void)startSessionSync {
     // 检查是否处于运行状态
     if (![self.captureSession isRunning]) {
@@ -274,17 +274,17 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
-// 停止会话
-- (void)stopSessionAsync {
+// 同步停止会话
+- (void)stopSessionSync {
     // 检查是否处于运行状态
     if ([self.captureSession isRunning]) {
-        dispatch_async(self.captureQueue, ^{
+        dispatch_sync(self.captureQueue, ^{
             [self.captureSession stopRunning];
         });
     }
 }
 
-// 开始会话
+// 异步开始会话
 - (void)startSessionAsync {
     // 检查是否处于运行状态
     if (![self.captureSession isRunning]) {
@@ -295,8 +295,8 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
-// 停止会话
-- (void)stopSessionSync {
+// 异步停止会话
+- (void)stopSessionAsync {
     // 检查是否处于运行状态
     if ([self.captureSession isRunning]) {
         dispatch_async(self.captureQueue, ^{
