@@ -10,6 +10,7 @@
 #import <UIKit/UIKit.h>
 #import <AssetsLibrary/AssetsLibrary.h>
 #import "NSFileManager+CQ.h"
+#import "AVCaptureDevice+Rate.h"
 
 #define kasync_main_safe(block)\
 if ([NSThread isMainThread]) {\
@@ -19,6 +20,8 @@ dispatch_async(dispatch_get_main_queue(), block);\
 }
 
 static const NSString *CameraAdjustingExposureContext;
+static const NSString *RampingVideoZoomContext;
+static const NSString *VideoZoomFactorContext;
 
 /**
  AVCaptureFileOutputRecordingDelegate 视频文件录制
@@ -65,24 +68,43 @@ static const NSString *CameraAdjustingExposureContext;
 /// 销毁会话
 - (void)destroyCaptureSession {
     if (self.captureSession) {
-        if (self.audioDeviceInput) [self.captureSession removeInput:self.audioDeviceInput];
-        if (self.videoDeviceInput) [self.captureSession removeInput:self.videoDeviceInput];
-        if (self.stillImageOutput) [self.captureSession removeOutput:self.stillImageOutput];
-        if (self.movieFileOutput) [self.captureSession removeOutput:self.movieFileOutput];
-        if (self.videoDataOutput) [self.captureSession removeOutput:self.videoDataOutput];
-        if (self.audioDataOutput) [self.captureSession removeOutput:self.audioDataOutput];
+        [self removeZoomKVO];
+        if (self.audioDeviceInput && [self.captureSession.inputs containsObject:self.audioDeviceInput]) {
+            [self.captureSession removeInput:self.audioDeviceInput];
+            self.audioDeviceInput = nil;
+        }
+        if (self.videoDeviceInput && [self.captureSession.inputs containsObject:self.videoDeviceInput]) {
+            [self.captureSession removeInput:self.videoDeviceInput];
+            self.videoDeviceInput = nil;
+        }
+        if (self.stillImageOutput && [self.captureSession.outputs containsObject:self.stillImageOutput]) {
+            [self.captureSession removeOutput:self.stillImageOutput];
+            self.stillImageOutput = nil;
+        }
+        if (self.movieFileOutput && [self.captureSession.outputs containsObject:self.movieFileOutput]) {
+            [self.captureSession removeOutput:self.movieFileOutput];
+            self.movieFileOutput = nil;
+        }
+        if (self.videoDataOutput && [self.captureSession.outputs containsObject:self.videoDataOutput]) {
+            [self.captureSession removeOutput:self.videoDataOutput];
+            self.videoDataOutput = nil;
+        }
+        if (self.audioDataOutput && [self.captureSession.outputs containsObject:self.videoDataOutput]) {
+            [self.captureSession removeOutput:self.audioDataOutput];
+            self.audioDataOutput = nil;
+        }
     }
     self.captureSession = nil;
 }
 
 #pragma mark - Public Func 参数配置
-/// 配置捕捉会话的分辨率
+/// 配置捕捉会话的分辨率,如果无法配置，则配置AVCaptureSessionPresetHigh
 - (void)configSessionPreset:(AVCaptureSessionPreset)sessionPreset {
     [self.captureSession beginConfiguration];
     if ([self.captureSession canSetSessionPreset:sessionPreset])  {
         self.captureSession.sessionPreset = sessionPreset;
     } else {
-        self.captureSession.sessionPreset = AVCaptureSessionPresetMedium;
+        self.captureSession.sessionPreset = AVCaptureSessionPresetHigh;
     }
     [self.captureSession commitConfiguration];
     self.isConfigSessionPreset = YES;
@@ -108,12 +130,13 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
-#pragma mark - Func 视频输入输出配置
+#pragma mark - Func 视频输入配置
 /// 配置视频输入
 - (BOOL)configVideoInput:(NSError * _Nullable *)error {
     // 添加视频捕捉设备
     // 拿到默认视频捕捉设备 iOS默认后置摄像头
-    AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+//    AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *videoDevice = [self getCameraWithPosition:AVCaptureDevicePositionBack];
     // 将捕捉设备转化为AVCaptureDeviceInput
     // 注意：会话不能直接使用AVCaptureDevice，必须将AVCaptureDevice封装成AVCaptureDeviceInput对象
     AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:error];
@@ -134,8 +157,10 @@ static const NSString *CameraAdjustingExposureContext;
 /// 移除视频输入设备
 - (void)removeVideoDeviceInput {
     if (self.videoDeviceInput) [self.captureSession removeInput:self.videoDeviceInput];
+    self.videoDeviceInput = nil;
 }
 
+#pragma mark - Func 静态图片输出配置
 /// 配置静态图片输出
 - (void)configStillImageOutput {
     // AVCaptureStillImageOutput 从摄像头捕捉静态图片
@@ -155,6 +180,7 @@ static const NSString *CameraAdjustingExposureContext;
     if (self.stillImageOutput) [self.captureSession removeOutput:self.stillImageOutput];
 }
 
+#pragma mark - Func 电影文件输出配置
 /// 配置电影文件输出
 - (void)configMovieFileOutput {
     // AVCaptureMovieFileOutput，将QuickTime视频录制到文件系统
@@ -171,15 +197,18 @@ static const NSString *CameraAdjustingExposureContext;
     if (self.movieFileOutput) [self.captureSession removeOutput:self.movieFileOutput];
 }
 
+#pragma mark - Func 视频数据输出配置
 /// 配置视频数据输出
 - (void)configVideoDataOutput {
     // 视频Buffer输出
     self.videoDataOutput = [[AVCaptureVideoDataOutput alloc] init];
     [self.videoDataOutput setSampleBufferDelegate:self queue:self.captureQueue];
     [self.videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
-    //kCVPixelBufferPixelFormatTypeKey它指定像素的输出格式，这个参数直接影响到生成图像的成功与否
+    //kCVPixelBufferPixelFormatTypeKey它指定像素的输出格式，这个参数直接影响输出的buffer到生成图像的成功与否，需要与外界指定相应的格式
    // kCVPixelFormatType_420YpCbCr8BiPlanarFullRange  YUV420格式.
-    [self.videoDataOutput setVideoSettings:@{(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)}];
+    self.videoDataOutput.videoSettings = @{(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)};
+    // CUBE Demo 用这个设置
+    self.videoDataOutput.videoSettings = @{(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_32BGRA)};
     [self.captureSession beginConfiguration];
     if ([self.captureSession canAddOutput:self.videoDataOutput]) {
         [self.captureSession addOutput:self.videoDataOutput];
@@ -192,7 +221,7 @@ static const NSString *CameraAdjustingExposureContext;
     if (self.videoDataOutput) [self.captureSession removeOutput:self.videoDataOutput];
 }
 
-#pragma mark - Func 音频输入输出配置
+#pragma mark - Func 音频输入配置
 /// 配置音频输入
 - (BOOL)configAudioInput:(NSError * _Nullable *)error {
     // 添加音频捕捉设备 ，如果只是拍摄静态图片，可以不用设置
@@ -214,6 +243,7 @@ static const NSString *CameraAdjustingExposureContext;
     if (self.audioDeviceInput) [self.captureSession removeInput:self.audioDeviceInput];
 }
 
+#pragma mark - Func 音频数据输出配置
 /// 配置音频数据输出
 - (BOOL)configAudioDataOutput {
     self.audioDataOutput = [[AVCaptureAudioDataOutput alloc] init];
@@ -377,8 +407,8 @@ static const NSString *CameraAdjustingExposureContext;
     }];
 }
 
-#pragma mark - 视频文件捕捉
-#pragma mark Public Func 视频文件捕捉
+#pragma mark - 电影文件捕捉
+#pragma mark Public Func 电影文件捕捉
 // 开始录制电影文件
 - (void)startRecordingMovieFile {
     if (!self.isConfigSessionPreset) [self configSessionPreset:AVCaptureSessionPresetMedium];
@@ -554,7 +584,7 @@ static const NSString *CameraAdjustingExposureContext;
         BOOL configResult = [self configVideoInput:&configError];
         if (!configResult) return;
     }
-    if (!self.movieFileOutput) [self configMovieFileOutput];
+    if (!self.videoDataOutput) [self configVideoDataOutput];
     [self startSessionSync];
 }
 
@@ -579,7 +609,10 @@ static const NSString *CameraAdjustingExposureContext;
 }
 
 #pragma mark AVCaptureVideo/AudioDataOutputSampleBufferDelegate
--(void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection{
+/**
+ 每当有一个新的视频帧写入时该方法就会被调用，数据会基于视频数据输出的videoSettings属性进行解码或重新编码
+ */
+-(void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     // 注意，视频/音频通过AV采集，都会走这里，需要对音频/视频做区分
     // 直接判断output 是videoDataOutput/Audio
     if ([captureOutput isKindOfClass:AVCaptureVideoDataOutput.class]) {
@@ -594,13 +627,24 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
+/**
+ 每当一个迟到的视频帧被丢弃时调用该方法，通常是因为在didOutputSampleBuffer调用中消耗了太多的处理时间就会调用该方法，应尽量提高处理效率，否则将收不到缓存数据
+ */
+- (void)captureOutput:(AVCaptureOutput *)output didDropSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    
+}
+
 #pragma mark - Getter
 /**
  获取当前活跃的设备，简单二次封装
  */
 
-- (NSUInteger)cameraCount {
-    return [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] count];
+- (NSUInteger)backCameraCount {
+    return [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInTelephotoCamera, AVCaptureDeviceTypeBuiltInUltraWideCamera] mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack].devices.count;
+}
+
+- (NSUInteger)frontCameraCount {
+    return [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInTelephotoCamera, AVCaptureDeviceTypeBuiltInUltraWideCamera] mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionFront].devices.count;
 }
 
 - (BOOL)isHasFlash {
@@ -625,6 +669,29 @@ static const NSString *CameraAdjustingExposureContext;
 
 - (AVCaptureTorchMode)torchMode {
     return [[self getActiveCamera] torchMode];
+}
+
+- (BOOL)isSupportZoom {
+    return [self getActiveCamera].activeFormat.videoMaxZoomFactor > 1.0f;
+}
+
+- (CGFloat)minZoomFactor {
+    if (@available(iOS 11.0, *)) {
+        return 1.0;
+    } else {
+        return [self getActiveCamera].minAvailableVideoZoomFactor;
+    }
+}
+
+- (CGFloat)maxZoomFactor {
+    // 4.0随意写的，默认不能超过4，也可以不用设置
+//    return MIN([self getActiveCamera].activeFormat.videoMaxZoomFactor, 20.0f);
+    // 两个值一样，和分辨率有关
+    if (@available(iOS 11.0, *)) {
+        return [self getActiveCamera].maxAvailableVideoZoomFactor;
+    } else {
+        return [self getActiveCamera].activeFormat.videoMaxZoomFactor;
+    }
 }
 
 #pragma mark - Setter
@@ -663,6 +730,42 @@ static const NSString *CameraAdjustingExposureContext;
 #pragma mark - Public Func 镜头切换
 /// 根据position拿到摄像头
 - (AVCaptureDevice *)getCameraWithPosition:(AVCaptureDevicePosition)position {
+    /**
+     AVCaptureDeviceTypeBuiltInWideAngleCamera 广角(默认设备，28mm左右焦段)
+
+     AVCaptureDeviceTypeBuiltInTelephotoCamera 长焦(默认设备的2x或3x,只能使用AVCaptureDeviceDiscoverySession获取)
+
+     AVCaptureDeviceTypeBuiltInUltraWideCamera 超广角(默认设备的0.5x，只能使用AVCaptureDeviceDiscoverySession获取)
+
+     AVCaptureDeviceTypeBuiltInDualCamera (一个广角一个长焦(iPhone7P,iPhoneX)，可以自动切换摄像头,只能使用AVCaptureDeviceDiscoverySession获取)
+
+     AVCaptureDeviceTypeBuiltInDualWideCamera (一个超广一个广角(iPhone12 iPhone13)，可以自动切换摄像头,只能使用AVCaptureDeviceDiscoverySession获取)
+
+     AVCaptureDeviceTypeBuiltInTripleCamera (超广，广角，长焦三摄像头，iPhone11ProMax iPhone12ProMax iPhone13ProMax，可以自动切换摄像头,只能使用AVCaptureDeviceDiscoverySession获取)
+
+     AVCaptureDeviceTypeBuiltInTrueDepthCamera (红外和摄像头， iPhone12ProMax iPhone13ProMax )
+     */
+    NSArray *deviceTypes;
+    if (position == AVCaptureDevicePositionBack) {
+        deviceTypes = @[AVCaptureDeviceTypeBuiltInDualCamera,
+                        AVCaptureDeviceTypeBuiltInDualWideCamera,
+                        AVCaptureDeviceTypeBuiltInTripleCamera, ];
+    } else {
+        deviceTypes = @[AVCaptureDeviceTypeBuiltInWideAngleCamera];
+    }
+    AVCaptureDeviceDiscoverySession *deviceSession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:position];
+    if (deviceSession.devices.count) return deviceSession.devices.firstObject;
+    
+    if (position == AVCaptureDevicePositionBack) {
+        // 非多摄手机
+        deviceTypes = @[AVCaptureDeviceTypeBuiltInWideAngleCamera];
+        AVCaptureDeviceDiscoverySession *deviceSession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes mediaType:AVMediaTypeVideo position:position];
+        if (deviceSession.devices.count) return deviceSession.devices.firstObject;
+    }
+    return nil;
+    
+    /*
+    // 过时了，多摄手机只能拿到主摄，无法拿到副摄像头
     NSArray<AVCaptureDevice *> *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     for (AVCaptureDevice *device in devices) {
         if (device.position == position) {
@@ -670,6 +773,7 @@ static const NSString *CameraAdjustingExposureContext;
         }
     }
     return nil;
+     */
 }
 
 /// 获取当前活跃的摄像头
@@ -677,26 +781,31 @@ static const NSString *CameraAdjustingExposureContext;
     return self.videoDeviceInput.device;
 }
 
-/// 获取未激活的摄像头
-- (AVCaptureDevice *)getInactiveCamera {
+- (void)setVideoDeviceInput:(AVCaptureDeviceInput *)videoDeviceInput {
+    [self removeZoomKVO];
+    _videoDeviceInput = videoDeviceInput;
+    if (videoDeviceInput) [self addZoomKVO];
+}
+
+/// 获取反方向的摄像头
+- (AVCaptureDevice *)getReverseCamera {
     // 通过查找当前激活摄像头的反向摄像头获得，如果设备只有1个摄像头，则返回nil
     AVCaptureDevice *device = nil;
-    if (self.cameraCount > 1) {
+    if (self.canSwitchCamera) {
         if ([self getActiveCamera].position == AVCaptureDevicePositionBack) {
             device = [self getCameraWithPosition:AVCaptureDevicePositionFront];
         } else {
             device = [self getCameraWithPosition:AVCaptureDevicePositionBack];
         }
     }
-    return device; 
+    return device;
 }
 
 // 切换摄像头
 - (BOOL)switchCamera {
     if (![self canSwitchCamera]) return NO;
-    
     // 获取当前设备的反向设备
-    AVCaptureDevice *inactiveCamera = [self getInactiveCamera];
+    AVCaptureDevice *inactiveCamera = [self getReverseCamera];
     // 将输入设备封装成AVCaptureDeviceInput
     NSError *error;
     AVCaptureDeviceInput *newVideoInput = [AVCaptureDeviceInput deviceInputWithDevice:inactiveCamera error:&error];
@@ -739,7 +848,106 @@ static const NSString *CameraAdjustingExposureContext;
 
 // 是否能切换摄像头
 - (BOOL)canSwitchCamera {
-    return self.cameraCount > 1;
+    return self.backCameraCount>0 && self.frontCameraCount>0;
+}
+
+#pragma mark - 高帧率录制
+- (BOOL)enableHighFrameRateCapture {
+    NSError *error;
+    return [[self getActiveCamera] enableMaxFrameRateCapture:&error];
+}
+
+
+#pragma mark - 镜头缩放
+- (void)configZoomFactor:(CGFloat)zoomFactor {
+    if (zoomFactor < self.minZoomFactor || zoomFactor > self.maxZoomFactor) return;
+    if ([self getActiveCamera].isRampingVideoZoom) {
+        [self cancelZoom];
+    };
+    NSError *error;
+    if ([[self getActiveCamera] lockForConfiguration:&error]) {
+        [self getActiveCamera].videoZoomFactor = zoomFactor;
+        [[self getActiveCamera] unlockForConfiguration];
+    } else {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(zoomCameraFailed)]) {
+            [_delegate zoomCameraFailed];
+        }
+    }
+}
+
+// 镜头缩放，直接调整videoZoomFactor  zoomValue范围0-1
+- (void)configZoomScaleValue:(CGFloat)zoomScaleValue {
+    if ([self getActiveCamera].isRampingVideoZoom) {
+        [self cancelZoom];
+    };
+    NSError *error;
+    if ([[self getActiveCamera] lockForConfiguration:&error]) {
+        // maxZoomFactor的zoomValue次冥达到缩放效果慢慢增大的效果
+        CGFloat zoomFactor = pow(self.maxZoomFactor, zoomScaleValue);
+        [self getActiveCamera].videoZoomFactor = zoomFactor;
+        [[self getActiveCamera] unlockForConfiguration];
+    } else {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(zoomCameraFailed)]) {
+            [_delegate zoomCameraFailed];
+        }
+    }
+}
+
+// 自增自减 自增1.0f 自减0.0f
+- (void)rampToZoom:(CGFloat)rampValue {
+    if ([self getActiveCamera].isRampingVideoZoom) {
+        [self cancelZoom];
+    };
+    CGFloat zoomFactor = pow(self.maxZoomFactor, rampValue);
+    NSError *error;
+    if ([[self getActiveCamera] lockForConfiguration:&error]) {
+        [[self getActiveCamera] rampToVideoZoomFactor:zoomFactor withRate:1.0f];
+        [[self getActiveCamera] unlockForConfiguration];
+    } else {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(zoomCameraFailed)]) {
+            [_delegate zoomCameraFailed];
+        }
+    }
+}
+
+- (void)cancelZoom {
+    NSError *error;
+    if ([[self getActiveCamera] lockForConfiguration:&error]) {
+        [[self getActiveCamera] cancelVideoZoomRamp];
+        [[self getActiveCamera] unlockForConfiguration];
+    } else {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(zoomCameraFailed)]) {
+            [_delegate zoomCameraFailed];
+        }
+    }
+}
+
+/// 添加缩放监听
+- (void)addZoomKVO {
+    @try {
+//        self.videoDeviceInput.device.videoZoomFactor;
+//        self.videoDeviceInput.device.rampingVideoZoom;
+        [[self videoDeviceInput].device addObserver:self forKeyPath:@"videoZoomFactor" options:NSKeyValueObservingOptionNew context:&VideoZoomFactorContext];
+        [[self videoDeviceInput].device addObserver:self forKeyPath:@"rampingVideoZoom" options:NSKeyValueObservingOptionNew context:&RampingVideoZoomContext];
+        [self zoomDelegateCallBack];
+    } @catch (NSException *exception) {
+        
+    } @finally {
+        
+    }
+    
+}
+
+/// 移除缩放监听
+- (void)removeZoomKVO {
+    @try {
+        [[self videoDeviceInput].device removeObserver:self forKeyPath:@"videoZoomFactor" context:&VideoZoomFactorContext];
+        [[self videoDeviceInput].device removeObserver:self forKeyPath:@"rampingVideoZoom" context:&RampingVideoZoomContext];
+    } @catch (NSException *exception) {
+        
+    } @finally {
+        
+    }
 }
 
 
@@ -805,33 +1013,6 @@ static const NSString *CameraAdjustingExposureContext;
     }
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    if (context == &CameraAdjustingExposureContext) {
-        //获取device
-        AVCaptureDevice *device = (AVCaptureDevice *)object;
-        // 设备不再调整曝光等级，说明自动调节曝光结束，并且支持设置为AVCaptureExposureModeLocked
-        // TODO: -测试监听次数
-        if(!device.isAdjustingExposure && [device isExposureModeSupported:AVCaptureExposureModeLocked] && device.isExposurePointOfInterestSupported) {
-            // 使用一次监听，立即移除通知
-            [object removeObserver:self forKeyPath:@"adjustingExposure" context:&CameraAdjustingExposureContext];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSError *error;
-                if ([device lockForConfiguration:&error]) {
-                    // 锁定曝光
-                    device.exposureMode = AVCaptureExposureModeLocked;
-                    [device unlockForConfiguration];
-                } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
-                            [self.delegate deviceConfigurationFailedWithError:error];
-                        }
-                    });
-                }
-            });
-        }
-    }
-}
-
 // 重置对焦和曝光
 - (void)resetFocusAndExposureModes {
     AVCaptureDevice *device = [self getActiveCamera];
@@ -861,6 +1042,66 @@ static const NSString *CameraAdjustingExposureContext;
                 [self.delegate deviceConfigurationFailedWithError:error];
             }
         });
+    }
+}
+
+#pragma mark - KVO
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if (context == &CameraAdjustingExposureContext) {
+        //获取device
+        AVCaptureDevice *device = (AVCaptureDevice *)object;
+        // 设备不再调整曝光等级，说明自动调节曝光结束，并且支持设置为AVCaptureExposureModeLocked
+        // TODO: 测试监听次数
+        if(!device.isAdjustingExposure && [device isExposureModeSupported:AVCaptureExposureModeLocked] && device.isExposurePointOfInterestSupported) {
+            // 使用一次监听，立即移除通知
+            [object removeObserver:self forKeyPath:@"adjustingExposure" context:&CameraAdjustingExposureContext];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSError *error;
+                if ([device lockForConfiguration:&error]) {
+                    // 锁定曝光
+                    device.exposureMode = AVCaptureExposureModeLocked;
+                    [device unlockForConfiguration];
+                } else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (self.delegate && [self.delegate respondsToSelector:@selector(deviceConfigurationFailedWithError:)]) {
+                            [self.delegate deviceConfigurationFailedWithError:error];
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    else if (context == &RampingVideoZoomContext) {
+        // rampToVideoZoomFactor函数缩放开始和缩放结束会调用到这里
+        [self zoomDelegateCallBack];
+    }
+    
+    else if (context == &VideoZoomFactorContext) {
+        // 并且有正在运行的缩放动作
+        if ([self getActiveCamera].isRampingVideoZoom) {
+            // rampToVideoZoomFactor函数缩放中会调用到这里
+            [self zoomDelegateCallBack];
+        } else {
+            // 直接设置videoZoomFactor值会调用到这里
+            [self zoomDelegateCallBack];
+        }
+    }
+    
+    else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
+}
+
+- (void)zoomDelegateCallBack {
+    CGFloat curZoomFactor = [self getActiveCamera].videoZoomFactor;
+    CGFloat maxZoomFactor = [self maxZoomFactor];
+    CGFloat scaleValue = log(curZoomFactor) / log(maxZoomFactor);
+    if (self.delegate && [self.delegate respondsToSelector:@selector(zoomCameraSuccessWithZoomScaleValue:)]) {
+        [self.delegate zoomCameraSuccessWithZoomScaleValue:scaleValue];
+    }
+    if (self.delegate && [self.delegate respondsToSelector:@selector(zoomCameraSuccessWithCurrentZoomFactor:)]) {
+        [self.delegate zoomCameraSuccessWithCurrentZoomFactor:curZoomFactor];
     }
 }
 

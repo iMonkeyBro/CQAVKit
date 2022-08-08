@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9018872728A111D200F50A9A /* AVCaptureDevice+Rate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9018872528A111D200F50A9A /* AVCaptureDevice+Rate.m */; };
 		901D5799274DE67C00AA415C /* NSFileManager+CQ.m in Sources */ = {isa = PBXBuildFile; fileRef = 901D5798274DE67C00AA415C /* NSFileManager+CQ.m */; };
 		90293E272780550D0057C166 /* CQVTLearningVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 90293E262780550D0057C166 /* CQVTLearningVC.m */; };
 		902B41DE27CB9E43006A0EFB /* CQAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 902B41DD27CB9E43006A0EFB /* CQAudioEncoder.m */; };
@@ -68,6 +69,8 @@
 /* Begin PBXFileReference section */
 		50566FC1D7CC24CC0F39690C /* libPods-CQAVKit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CQAVKit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63D95C982079000A34819C2F /* Pods-CQAVKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CQAVKit.debug.xcconfig"; path = "Target Support Files/Pods-CQAVKit/Pods-CQAVKit.debug.xcconfig"; sourceTree = "<group>"; };
+		9018872528A111D200F50A9A /* AVCaptureDevice+Rate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AVCaptureDevice+Rate.m"; sourceTree = "<group>"; };
+		9018872628A111D200F50A9A /* AVCaptureDevice+Rate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AVCaptureDevice+Rate.h"; sourceTree = "<group>"; };
 		901D5797274DE67C00AA415C /* NSFileManager+CQ.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSFileManager+CQ.h"; sourceTree = "<group>"; };
 		901D5798274DE67C00AA415C /* NSFileManager+CQ.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSFileManager+CQ.m"; sourceTree = "<group>"; };
 		90293E252780550D0057C166 /* CQVTLearningVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CQVTLearningVC.h; sourceTree = "<group>"; };
@@ -474,6 +477,8 @@
 		9DF394C82725CC4A0095E269 /* CQCapture */ = {
 			isa = PBXGroup;
 			children = (
+				9018872628A111D200F50A9A /* AVCaptureDevice+Rate.h */,
+				9018872528A111D200F50A9A /* AVCaptureDevice+Rate.m */,
 				9DC5068B2729B8C100FE7C27 /* CQCapturePreviewView.h */,
 				9DC5068C2729B8C100FE7C27 /* CQCapturePreviewView.m */,
 				9D1FB5C4272B12AC00F74260 /* CQCaptureManager.h */,
@@ -645,6 +650,7 @@
 				90AAC59428085B4800677BDC /* CQTestViewController.m in Sources */,
 				90DE9CA327CB62FA00A7417E /* ExcelView.swift in Sources */,
 				9D1D3DDD27AE9180009E7329 /* CQVideoDecoder.m in Sources */,
+				9018872728A111D200F50A9A /* AVCaptureDevice+Rate.m in Sources */,
 				902B41E127CB9E52006A0EFB /* CQAudioDecoder.m in Sources */,
 				9059D5792751CB5300661C42 /* CQCameraStatusView.m in Sources */,
 				90A590752786EEBF0038CFD2 /* CQAuthorizationTool.m in Sources */,
